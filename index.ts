@@ -294,7 +294,7 @@ const blueNexusPlugin = {
             content: [
               {
                 type: "text",
-                text: "Not authenticated with BlueNexus. Run: openclaw auth add bluenexus",
+                text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
               },
             ],
           }
@@ -306,7 +306,7 @@ const blueNexusPlugin = {
             content: [
               {
                 type: "text",
-                text: "BlueNexus authentication expired. Run: openclaw auth add bluenexus",
+                text: "BlueNexus authentication expired. Run: openclaw models auth login --provider bluenexus",
               },
             ],
           }
@@ -331,7 +331,7 @@ const blueNexusPlugin = {
             content: [
               {
                 type: "text",
-                text: "Not authenticated with BlueNexus. Run: openclaw auth add bluenexus",
+                text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
               },
             ],
           }
@@ -343,7 +343,7 @@ const blueNexusPlugin = {
             content: [
               {
                 type: "text",
-                text: "BlueNexus authentication expired. Run: openclaw auth add bluenexus",
+                text: "BlueNexus authentication expired. Run: openclaw models auth login --provider bluenexus",
               },
             ],
           }
