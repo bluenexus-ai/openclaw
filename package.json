@@ -1,0 +1,58 @@
+{
+  "name": "bluenexus",
+  "version": "0.1.0",
+  "license": "MIT",
+  "description": "OpenClaw plugin for BlueNexus Universal MCP - connect OpenClaw agents to BlueNexus services",
+  "type": "module",
+  "files": [
+    "dist",
+    "openclaw.plugin.json"
+  ],
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "clean:node_modules": "rm -rf node_modules",
+    "clean:dist": "rm -rf dist",
+    "dev": "tsc --watch",
+    "build": "tsc",
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@sinclair/typebox": "^0.34.33",
+    "undici": "^7.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.7",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-plugin",
+    "bluenexus",
+    "mcp",
+    "model-context-protocol",
+    "ai-agent"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bluenexus-ai/bluenexus.git",
+    "directory": "packages/openclaw-plugin"
+  },
+  "homepage": "https://github.com/bluenexus-ai/bluenexus#readme",
+  "bugs": {
+    "url": "https://github.com/bluenexus-ai/bluenexus/issues"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
+}

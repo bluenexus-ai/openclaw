@@ -1,0 +1,48 @@
+{
+  "$schema": "https://openclaw.io/schemas/plugin.json",
+  "id": "bluenexus",
+  "name": "BlueNexus",
+  "description": "Connect to BlueNexus Universal MCP to access your connected services (GitHub, Notion, Slack, and more)",
+  "version": "0.1.0",
+  "author": "BlueNexus",
+  "homepage": "https://bluenexus.ai",
+  "repository": "https://github.com/bluenexus-ai/bluenexus",
+  "license": "MIT",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "serverUrl": {
+        "type": "string",
+        "default": "https://localhost:3000",
+        "description": "BlueNexus API server URL"
+      },
+      "clientId": {
+        "type": "string",
+        "default": "",
+        "description": "Fallback OAuth client ID. Leave empty to use Dynamic Client Registration (recommended)."
+      },
+      "redirectPort": {
+        "type": "number",
+        "default": 51122,
+        "description": "Local port for OAuth callback server"
+      }
+    }
+  },
+  "uiHints": {
+    "serverUrl": {
+      "label": "Server URL",
+      "help": "BlueNexus API server URL. Use default for local development.",
+      "placeholder": "https://localhost:3000"
+    },
+    "clientId": {
+      "label": "Client ID (Optional)",
+      "help": "Leave empty for automatic registration (DCR). Only set if you have a pre-registered client.",
+      "advanced": true
+    },
+    "redirectPort": {
+      "label": "Redirect Port",
+      "help": "Local port for OAuth callback. Change if port 51122 is in use.",
+      "advanced": true
+    }
+  }
+}
