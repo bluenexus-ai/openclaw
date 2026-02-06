@@ -14,6 +14,8 @@ export type BlueNexusCredential = {
   email?: string
   /** OAuth client ID (from DCR or config fallback) - needed for token refresh */
   clientId?: string
+  /** Server URL - needed for token refresh to discover OAuth metadata */
+  serverUrl?: string
 }
 
 /**

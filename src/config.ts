@@ -50,7 +50,7 @@ export function parseConfig(raw: unknown): BlueNexusPluginConfig {
  */
 export function getMcpEndpoint(serverUrl: string): string {
   const base = serverUrl.endsWith("/") ? serverUrl.slice(0, -1) : serverUrl
-  return `${base}/api/v1/mcp`
+  return `${base}/mcp`
 }
 
 /**

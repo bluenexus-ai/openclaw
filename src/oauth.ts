@@ -467,7 +467,7 @@ export async function loginBlueNexus(
     redirectUri,
     challenge,
     state,
-    scope: "openid profile email account connections mcp-proxy",
+    scope: "openid profile email account connections mcp-proxy llm-all",
   })
 
   // Determine if we need manual flow
@@ -564,5 +564,6 @@ export async function loginBlueNexus(
     refresh: tokens.refresh,
     expires: tokens.expires,
     clientId, // Store the client ID (from DCR or config) for token refresh
+    serverUrl: config.serverUrl, // Store for token refresh metadata discovery
   }
 }

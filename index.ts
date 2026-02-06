@@ -11,32 +11,21 @@
  * - Connections listing tool to see available integrations
  */
 
-import { configUiHints, parseConfig } from "./src/config.js"
-import { createMcpClient } from "./src/mcp-client.js"
-import { readFile } from "node:fs/promises"
-import { join } from "node:path"
-import {
-  fetchOAuthMetadata,
-  loginBlueNexus,
-  refreshToken,
-} from "./src/oauth.js"
-import { agentTool, executeAgentTool } from "./src/tools/agent.js"
-import {
-  connectionsTool,
-  executeConnectionsTool,
-} from "./src/tools/connections.js"
-import type {
-  AgentToolParams,
-  BlueNexusCredential,
-  BlueNexusPluginConfig,
-} from "./src/types.js"
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import type { AgentToolParams, BlueNexusCredential, BlueNexusPluginConfig } from "./src/types.js";
+import { configUiHints, parseConfig } from "./src/config.js";
+import { createMcpClient } from "./src/mcp-client.js";
+import { fetchOAuthMetadata, loginBlueNexus, refreshToken } from "./src/oauth.js";
+import { agentTool, executeAgentTool } from "./src/tools/agent.js";
+import { connectionsTool, executeConnectionsTool } from "./src/tools/connections.js";
 
 /**
  * Module-level credential store for sharing credentials between OAuth and tools.
  * This is necessary because OpenClaw's tool execution context doesn't provide
  * a built-in credential accessor for plugin-registered providers.
  */
-const credentialStore = new Map<string, BlueNexusCredential>()
+const credentialStore = new Map<string, BlueNexusCredential>();
 
 /**
  * Get the current credential from the store
@@ -45,12 +34,12 @@ function getStoredCredential(): BlueNexusCredential | undefined {
   // Try to get credential by profile ID patterns
   for (const [key, cred] of credentialStore) {
     if (key.startsWith("bluenexus:")) {
-      return cred
+      return cred;
     }
   }
   // Fallback to any credential
-  const first = credentialStore.values().next()
-  return first.done ? undefined : first.value
+  const first = credentialStore.values().next();
+  return first.done ? undefined : first.value;
 }
 
 /**
@@ -61,30 +50,29 @@ function getStoredCredential(): BlueNexusCredential | undefined {
  * store.
  */
 async function loadCredentialFromAuthProfiles(
-  ctx: unknown
+  ctx: unknown,
 ): Promise<BlueNexusCredential | undefined> {
   try {
-    const agentDirFromCtx = (ctx as any)?.agentDir as string | undefined
-    const agentDir =
-      agentDirFromCtx ?? join(process.env.HOME ?? "", ".openclaw/agents/main/agent")
+    const agentDirFromCtx = (ctx as any)?.agentDir as string | undefined;
+    const agentDir = agentDirFromCtx ?? join(process.env.HOME ?? "", ".openclaw/agents/main/agent");
 
-    const authPath = join(agentDir, "auth-profiles.json")
-    const raw = await readFile(authPath, "utf8")
-    const json = JSON.parse(raw)
-    const profiles = json?.profiles
-    if (!profiles || typeof profiles !== "object") return undefined
+    const authPath = join(agentDir, "auth-profiles.json");
+    const raw = await readFile(authPath, "utf8");
+    const json = JSON.parse(raw);
+    const profiles = json?.profiles;
+    if (!profiles || typeof profiles !== "object") return undefined;
 
     // Prefer bluenexus:default; otherwise pick first bluenexus:* profile
-    const direct = profiles["bluenexus:default"]
-    let found = direct
+    const direct = profiles["bluenexus:default"];
+    let found = direct;
     if (!found) {
-      const key = Object.keys(profiles).find((k) => k.startsWith("bluenexus:"))
-      found = key ? profiles[key] : undefined
+      const key = Object.keys(profiles).find((k) => k.startsWith("bluenexus:"));
+      found = key ? profiles[key] : undefined;
     }
-    if (!found) return undefined
+    if (!found) return undefined;
 
     // Minimal shape check
-    if (found.provider !== "bluenexus" || found.type !== "oauth") return undefined
+    if (found.provider !== "bluenexus" || found.type !== "oauth") return undefined;
 
     const cred: BlueNexusCredential = {
       type: "oauth",
@@ -94,26 +82,93 @@ async function loadCredentialFromAuthProfiles(
       expires: Number(found.expires ?? 0),
       email: found.email ? String(found.email) : undefined,
       clientId: found.clientId ? String(found.clientId) : undefined,
-    }
+    };
 
-    if (!cred.access || !cred.refresh || !cred.expires) return undefined
+    if (!cred.access || !cred.refresh || !cred.expires) return undefined;
 
-    const profileId = `bluenexus:${cred.email ?? "default"}`
-    storeCredential(profileId, cred)
-    return cred
+    const profileId = `bluenexus:${cred.email ?? "default"}`;
+    storeCredential(profileId, cred);
+    return cred;
   } catch {
-    return undefined
+    return undefined;
   }
 }
 
 /**
  * Store a credential after successful OAuth
  */
-function storeCredential(
-  profileId: string,
-  credential: BlueNexusCredential
-): void {
-  credentialStore.set(profileId, credential)
+function storeCredential(profileId: string, credential: BlueNexusCredential): void {
+  credentialStore.set(profileId, credential);
+}
+
+/**
+ * Try to refresh an expired credential using the refresh token.
+ * Returns a fresh credential on success, or null on failure.
+ */
+async function tryRefreshCredential(
+  credential: BlueNexusCredential,
+  config: BlueNexusPluginConfig,
+): Promise<BlueNexusCredential | null> {
+  try {
+    const serverUrl = credential.serverUrl ?? config.serverUrl;
+    if (!serverUrl) {
+      return null;
+    }
+
+    const metadata = await fetchOAuthMetadata(serverUrl);
+
+    const clientId = credential.clientId ?? config.clientId;
+    if (!clientId) {
+      return null;
+    }
+
+    const tokens = await refreshToken({
+      tokenEndpoint: metadata.token_endpoint,
+      clientId,
+      refreshToken: credential.refresh,
+    });
+
+    return {
+      type: "oauth",
+      provider: "bluenexus",
+      access: tokens.access,
+      refresh: tokens.refresh,
+      expires: tokens.expires,
+      email: credential.email,
+      clientId: credential.clientId,
+      serverUrl: credential.serverUrl,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Persist a refreshed credential to auth-profiles.json so it survives restarts.
+ * Best-effort — errors are swallowed.
+ */
+async function persistCredentialToDisk(
+  credential: BlueNexusCredential,
+  ctx: unknown,
+): Promise<void> {
+  try {
+    const agentDirFromCtx = (ctx as Record<string, unknown>)?.agentDir as string | undefined;
+    const agentDir = agentDirFromCtx ?? join(process.env.HOME ?? "", ".openclaw/agents/main/agent");
+
+    const authPath = join(agentDir, "auth-profiles.json");
+    const raw = await readFile(authPath, "utf8");
+    const json = JSON.parse(raw);
+    const profiles = json?.profiles;
+    if (!profiles || typeof profiles !== "object") {
+      return;
+    }
+
+    const profileId = `bluenexus:${credential.email ?? "default"}`;
+    profiles[profileId] = credential;
+    await writeFile(authPath, JSON.stringify(json, null, 2) + "\n", "utf8");
+  } catch {
+    // best-effort
+  }
 }
 
 /**
@@ -121,10 +176,10 @@ function storeCredential(
  */
 const blueNexusConfigSchema = {
   parse(value: unknown): BlueNexusPluginConfig {
-    return parseConfig(value)
+    return parseConfig(value);
   },
   uiHints: configUiHints,
-}
+};
 
 /**
  * BlueNexus OpenClaw Plugin
@@ -132,68 +187,64 @@ const blueNexusConfigSchema = {
 const blueNexusPlugin = {
   id: "bluenexus",
   name: "BlueNexus",
-  description:
-    "Connect to BlueNexus Universal MCP for access to GitHub, Notion, Slack, and more",
+  description: "Connect to BlueNexus Universal MCP for access to GitHub, Notion, Slack, and more",
   configSchema: blueNexusConfigSchema,
 
   register(api: {
-    pluginConfig: unknown
+    pluginConfig: unknown;
     logger: {
-      info?: (msg: string) => void
-      warn: (msg: string) => void
-      error: (msg: string) => void
-    }
+      info?: (msg: string) => void;
+      warn: (msg: string) => void;
+      error: (msg: string) => void;
+    };
     registerProvider: (provider: {
-      id: string
-      label: string
-      docsPath?: string
-      aliases?: string[]
+      id: string;
+      label: string;
+      docsPath?: string;
+      aliases?: string[];
       auth: Array<{
-        id: string
-        label: string
-        hint?: string
-        kind: "oauth"
+        id: string;
+        label: string;
+        hint?: string;
+        kind: "oauth";
         run: (ctx: {
-          isRemote: boolean
-          openUrl: (url: string) => Promise<void>
+          isRemote: boolean;
+          openUrl: (url: string) => Promise<void>;
           prompter: {
-            text: (opts: { message: string }) => Promise<string | symbol>
-            note: (message: string, title?: string) => Promise<void>
+            text: (opts: { message: string }) => Promise<string | symbol>;
+            note: (message: string, title?: string) => Promise<void>;
             progress: (msg: string) => {
-              update: (msg: string) => void
-              stop: (msg?: string) => void
-            }
-          }
-          runtime: { log: (msg: string) => void }
+              update: (msg: string) => void;
+              stop: (msg?: string) => void;
+            };
+          };
+          runtime: { log: (msg: string) => void };
         }) => Promise<{
           profiles: Array<{
-            profileId: string
-            credential: BlueNexusCredential
-          }>
-          notes?: string[]
-        }>
-      }>
-      refreshOAuth?: (params: {
-        credential: BlueNexusCredential
-        config: BlueNexusPluginConfig
-      }) => Promise<BlueNexusCredential>
-    }) => void
+            profileId: string;
+            credential: BlueNexusCredential;
+          }>;
+          notes?: string[];
+        }>;
+      }>;
+      refreshOAuth?: (credential: BlueNexusCredential) => Promise<BlueNexusCredential>;
+    }) => void;
     registerTool: (tool: {
-      name: string
-      label: string
-      description: string
-      parameters: unknown
+      name: string;
+      label: string;
+      description: string;
+      parameters: unknown;
       execute: (
         toolCallId: string,
         params: unknown,
-        ctx: unknown
+        ctx: unknown,
       ) => Promise<{
-        content: Array<{ type: string; text: string }>
-        details?: unknown
-      }>
-    }) => void
+        content: Array<{ type: string; text: string }>;
+        details?: unknown;
+      }>;
+    }) => void;
   }) {
-    const config = blueNexusConfigSchema.parse(api.pluginConfig)
+    const config = blueNexusConfigSchema.parse(api.pluginConfig);
 
     // Register the BlueNexus OAuth provider
     api.registerProvider({
@@ -208,23 +259,22 @@ const blueNexusPlugin = {
           hint: "OAuth 2.1 PKCE flow with DCR",
           kind: "oauth",
           run: async (ctx) => {
-            const spin = ctx.prompter.progress("Starting BlueNexus OAuth...")
+            const spin = ctx.prompter.progress("Starting BlueNexus OAuth...");
 
             try {
               const credential = await loginBlueNexus(config, {
                 isRemote: ctx.isRemote,
                 openUrl: ctx.openUrl,
-                prompt: async (message) =>
-                  String(await ctx.prompter.text({ message })),
+                prompt: async (message) => String(await ctx.prompter.text({ message })),
                 note: ctx.prompter.note,
                 log: (message) => ctx.runtime.log(message),
                 progress: spin,
-              })
+              });
 
-              const profileId = `bluenexus:${credential.email ?? "default"}`
+              const profileId = `bluenexus:${credential.email ?? "default"}`;
 
               // Store credential in module-level store for tool access
-              storeCredential(profileId, credential)
+              storeCredential(profileId, credential);
 
               return {
                 profiles: [
@@ -237,57 +287,37 @@ const blueNexusPlugin = {
                   "BlueNexus connected! Use bluenexus_connections to see available services.",
                   "Use bluenexus_agent to interact with your connected services.",
                 ],
-              }
+              };
             } catch (err) {
-              spin.stop("BlueNexus OAuth failed")
-              throw err
+              spin.stop("BlueNexus OAuth failed");
+              throw err;
             }
           },
         },
       ],
 
-      // Token refresh handler
-      async refreshOAuth({ credential, config: pluginConfig }) {
-        const metadata = await fetchOAuthMetadata(pluginConfig.serverUrl)
-        // Use stored client ID from credential (DCR), falling back to config
-        const clientId = credential.clientId ?? pluginConfig.clientId
-        if (!clientId) {
-          throw new Error(
-            "No client ID available for token refresh. Re-authenticate with BlueNexus."
-          )
-        }
-        const tokens = await refreshToken({
-          tokenEndpoint: metadata.token_endpoint,
-          clientId,
-          refreshToken: credential.refresh,
-        })
-
-        const refreshedCredential: BlueNexusCredential = {
-          type: "oauth",
-          provider: "bluenexus",
-          access: tokens.access,
-          refresh: tokens.refresh,
-          expires: tokens.expires,
-          email: credential.email,
-          clientId: credential.clientId, // Preserve the stored client ID
+      // Token refresh handler - kept for forward-compatibility (core may call it)
+      async refreshOAuth(credential) {
+        const refreshed = await tryRefreshCredential(credential, config);
+        if (!refreshed) {
+          throw new Error("Token refresh failed. Re-authenticate with BlueNexus.");
         }
 
-        // Update credential in module-level store
-        const profileId = `bluenexus:${credential.email ?? "default"}`
-        storeCredential(profileId, refreshedCredential)
+        const profileId = `bluenexus:${refreshed.email ?? "default"}`;
+        storeCredential(profileId, refreshed);
 
-        return refreshedCredential
+        return refreshed;
       },
-    })
+    });
 
     // Register the bluenexus_connections tool
     api.registerTool({
       ...connectionsTool,
       async execute(_toolCallId, _params, _ctx) {
-        let credential = getStoredCredential()
+        let credential = getStoredCredential();
         // If missing or expired, reload from disk (models auth login writes there)
         if (!credential || Date.now() >= credential.expires) {
-          credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential
+          credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential;
         }
         if (!credential) {
           return {
@@ -297,34 +327,42 @@ const blueNexusPlugin = {
                 text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
               },
             ],
-          }
+          };
         }
 
-        // Check if token is expired
+        // Auto-refresh if token is expired
         if (Date.now() >= credential.expires) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "BlueNexus authentication expired. Run: openclaw models auth login --provider bluenexus",
-              },
-            ],
+          const refreshed = await tryRefreshCredential(credential, config);
+          if (refreshed) {
+            const profileId = `bluenexus:${refreshed.email ?? "default"}`;
+            storeCredential(profileId, refreshed);
+            await persistCredentialToDisk(refreshed, _ctx);
+            credential = refreshed;
+          } else {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus",
+                },
+              ],
+            };
           }
         }
 
-        const client = createMcpClient(config, credential.access)
-        return executeConnectionsTool(client)
+        const client = createMcpClient(config, credential.access);
+        return executeConnectionsTool(client);
       },
-    })
+    });
 
     // Register the bluenexus_agent tool
     api.registerTool({
       ...agentTool,
       async execute(_toolCallId, params, _ctx) {
-        let credential = getStoredCredential()
+        let credential = getStoredCredential();
         // If missing or expired, reload from disk (models auth login writes there)
         if (!credential || Date.now() >= credential.expires) {
-          credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential
+          credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential;
         }
         if (!credential) {
           return {
@@ -334,31 +372,39 @@ const blueNexusPlugin = {
                 text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
               },
             ],
-          }
+          };
         }
 
-        // Check if token is expired
+        // Auto-refresh if token is expired
         if (Date.now() >= credential.expires) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "BlueNexus authentication expired. Run: openclaw models auth login --provider bluenexus",
-              },
-            ],
+          const refreshed = await tryRefreshCredential(credential, config);
+          if (refreshed) {
+            const profileId = `bluenexus:${refreshed.email ?? "default"}`;
+            storeCredential(profileId, refreshed);
+            await persistCredentialToDisk(refreshed, _ctx);
+            credential = refreshed;
+          } else {
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus",
+                },
+              ],
+            };
           }
         }
 
-        const client = createMcpClient(config, credential.access)
-        return executeAgentTool(client, params as AgentToolParams)
+        const client = createMcpClient(config, credential.access);
+        return executeAgentTool(client, params as AgentToolParams);
       },
-    })
+    });
 
-    api.logger.info?.("BlueNexus plugin registered")
+    api.logger.info?.("BlueNexus plugin registered");
   },
-}
+};
 
-export default blueNexusPlugin
+export default blueNexusPlugin;
 
 // Re-export types for consumers
-export type { BlueNexusCredential, BlueNexusPluginConfig } from "./src/types.js"
+export type { BlueNexusCredential, BlueNexusPluginConfig } from "./src/types.js";
