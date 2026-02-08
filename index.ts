@@ -20,6 +20,12 @@ import { fetchOAuthMetadata, loginBlueNexus, refreshToken } from "./src/oauth.js
 import { agentTool, executeAgentTool } from "./src/tools/agent.js";
 import { connectionsTool, executeConnectionsTool } from "./src/tools/connections.js";
 
+type PluginLogger = {
+  info?: (msg: string) => void;
+  warn: (msg: string) => void;
+  error: (msg: string) => void;
+};
+
 /**
  * Module-level credential store for sharing credentials between OAuth and tools.
  * This is necessary because OpenClaw's tool execution context doesn't provide
@@ -82,6 +88,7 @@ async function loadCredentialFromAuthProfiles(
       expires: Number(found.expires ?? 0),
       email: found.email ? String(found.email) : undefined,
       clientId: found.clientId ? String(found.clientId) : undefined,
+      serverUrl: found.serverUrl ? String(found.serverUrl) : undefined,
     };
 
     if (!cred.access || !cred.refresh || !cred.expires) return undefined;
@@ -108,19 +115,22 @@ function storeCredential(profileId: string, credential: BlueNexusCredential): vo
 async function tryRefreshCredential(
   credential: BlueNexusCredential,
   config: BlueNexusPluginConfig,
+  log?: PluginLogger,
 ): Promise<BlueNexusCredential | null> {
   try {
     const serverUrl = credential.serverUrl ?? config.serverUrl;
     if (!serverUrl) {
+      log?.warn("BlueNexus token refresh skipped: no serverUrl in credential or config");
+      return null;
+    }
+
+    const clientId = credential.clientId ?? config.clientId;
+    if (!clientId) {
+      log?.warn("BlueNexus token refresh skipped: no clientId in credential or config");
       return null;
     }
 
     const metadata = await fetchOAuthMetadata(serverUrl);
-
-    const clientId = credential.clientId ?? config.clientId;
-    if (!clientId) {
-      return null;
-    }
 
     const tokens = await refreshToken({
       tokenEndpoint: metadata.token_endpoint,
@@ -135,21 +145,25 @@ async function tryRefreshCredential(
       refresh: tokens.refresh,
       expires: tokens.expires,
       email: credential.email,
-      clientId: credential.clientId,
-      serverUrl: credential.serverUrl,
+      clientId: credential.clientId ?? clientId,
+      serverUrl: credential.serverUrl ?? serverUrl,
     };
-  } catch {
+  } catch (err) {
+    log?.error(
+      `BlueNexus token refresh failed: ${err instanceof Error ? err.message : String(err)}`,
+    );
     return null;
   }
 }
 
 /**
  * Persist a refreshed credential to auth-profiles.json so it survives restarts.
- * Best-effort — errors are swallowed.
+ * Critical with refresh token rotation — a failed persist loses the new token.
  */
 async function persistCredentialToDisk(
   credential: BlueNexusCredential,
   ctx: unknown,
+  log?: PluginLogger,
 ): Promise<void> {
   try {
     const agentDirFromCtx = (ctx as Record<string, unknown>)?.agentDir as string | undefined;
@@ -160,14 +174,19 @@ async function persistCredentialToDisk(
     const json = JSON.parse(raw);
     const profiles = json?.profiles;
     if (!profiles || typeof profiles !== "object") {
+      log?.warn("BlueNexus: auth-profiles.json has no profiles object, cannot persist refreshed token");
       return;
     }
 
     const profileId = `bluenexus:${credential.email ?? "default"}`;
     profiles[profileId] = credential;
     await writeFile(authPath, JSON.stringify(json, null, 2) + "\n", "utf8");
-  } catch {
-    // best-effort
+  } catch (err) {
+    // With refresh token rotation, a failed persist means the new token is lost
+    // and the old one is already invalidated — the user will need to re-authenticate
+    log?.error(
+      `BlueNexus: failed to persist refreshed token to disk: ${err instanceof Error ? err.message : String(err)}`,
+    );
   }
 }
 
@@ -192,11 +211,7 @@ const blueNexusPlugin = {
 
   register(api: {
     pluginConfig: unknown;
-    logger: {
-      info?: (msg: string) => void;
-      warn: (msg: string) => void;
-      error: (msg: string) => void;
-    };
+    logger: PluginLogger;
     registerProvider: (provider: {
       id: string;
       label: string;
@@ -245,6 +260,7 @@ const blueNexusPlugin = {
     }) => void;
   }) {
     const config = blueNexusConfigSchema.parse(api.pluginConfig);
+    const log = api.logger;
 
     // Register the BlueNexus OAuth provider
     api.registerProvider({
@@ -298,7 +314,7 @@ const blueNexusPlugin = {
 
       // Token refresh handler - kept for forward-compatibility (core may call it)
       async refreshOAuth(credential) {
-        const refreshed = await tryRefreshCredential(credential, config);
+        const refreshed = await tryRefreshCredential(credential, config, log);
         if (!refreshed) {
           throw new Error("Token refresh failed. Re-authenticate with BlueNexus.");
         }
@@ -332,11 +348,11 @@ const blueNexusPlugin = {
 
         // Auto-refresh if token is expired
         if (Date.now() >= credential.expires) {
-          const refreshed = await tryRefreshCredential(credential, config);
+          const refreshed = await tryRefreshCredential(credential, config, log);
           if (refreshed) {
             const profileId = `bluenexus:${refreshed.email ?? "default"}`;
             storeCredential(profileId, refreshed);
-            await persistCredentialToDisk(refreshed, _ctx);
+            await persistCredentialToDisk(refreshed, _ctx, log);
             credential = refreshed;
           } else {
             return {
@@ -377,11 +393,11 @@ const blueNexusPlugin = {
 
         // Auto-refresh if token is expired
         if (Date.now() >= credential.expires) {
-          const refreshed = await tryRefreshCredential(credential, config);
+          const refreshed = await tryRefreshCredential(credential, config, log);
           if (refreshed) {
             const profileId = `bluenexus:${refreshed.email ?? "default"}`;
             storeCredential(profileId, refreshed);
-            await persistCredentialToDisk(refreshed, _ctx);
+            await persistCredentialToDisk(refreshed, _ctx, log);
             credential = refreshed;
           } else {
             return {
@@ -400,7 +416,7 @@ const blueNexusPlugin = {
       },
     });
 
-    api.logger.info?.("BlueNexus plugin registered");
+    log.info?.("BlueNexus plugin registered");
   },
 };
 
