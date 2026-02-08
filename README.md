@@ -32,67 +32,11 @@ npm run build
 npm run dev
 ```
 
-## Local Testing with Verdaccio
-
-Verdaccio is a lightweight local npm registry for testing packages before publishing to npm.
-
-### Setup Verdaccio
-
-```bash
-# Install Verdaccio globally
-npm install -g verdaccio
-
-# Start Verdaccio (runs on http://localhost:4873)
-verdaccio
-
-# Register a test user (first time only)
-curl -X PUT -H "Content-Type: application/json" \
-  -d '{"name":"test","password":"test","email":"test@test.com"}' \
-  http://localhost:4873/-/user/org.couchdb.user:test
-
-# Set auth token
-npm set //localhost:4873/:_authToken "<token-from-above>"
-
-# Configure npm to use local registry
-npm config set registry http://localhost:4873
-```
-
-### Publish to Verdaccio
-
-```bash
-# Build and publish
-npm run build
-npm publish --registry http://localhost:4873
-
-# Or bump version and publish
-npm version patch --no-git-tag-version
-npm run build
-npm publish --registry http://localhost:4873
-```
-
-### Install Plugin from Verdaccio
-
-```bash
-# Install the plugin
-openclaw plugins install bluenexus
-
-# Restart gateway to load
-openclaw gateway restart
-
-# Verify installation
-openclaw plugins list
-```
-
 ## Plugin Development Workflow
 
 ### Quick Iteration Cycle
 
 ```bash
-# 1. Make code changes
-# 2. Bump version, build, and publish
-npm version patch --no-git-tag-version && npm run build && npm publish --registry http://localhost:4873
-
-# 3. Reinstall plugin
 rm -rf ~/.openclaw/extensions/bluenexus
 openclaw plugins install bluenexus
 openclaw gateway restart
