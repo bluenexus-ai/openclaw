@@ -1,129 +1,129 @@
-# BlueNexus OpenClaw Plugin - Development Guide
+# @bluenexus/openclaw
 
-## Overview
+OpenClaw plugin for [BlueNexus](https://bluenexus.ai) Universal MCP. Connect your OpenClaw agents to GitHub, Notion, Slack, Google, and 20+ other services through a single plugin.
 
-This plugin enables OpenClaw agents to connect to BlueNexus Universal MCP, providing access to connected services like GitHub, Notion, Slack, and more.
-
-## Prerequisites
-
-- Node.js 18+
-- pnpm or npm
-- OpenClaw CLI installed
-
-## Development Setup
-
-### 1. Install Dependencies
+## Installation
 
 ```bash
-pnpm install
-# or
-npm install
+openclaw plugins install @bluenexus/openclaw
 ```
-
-### 2. Build the Project
-
-```bash
-npm run build
-```
-
-### 3. Watch Mode (Development)
-
-```bash
-npm run dev
-```
-
-## Plugin Development Workflow
-
-### Quick Iteration Cycle
-
-```bash
-rm -rf ~/.openclaw/extensions/bluenexus
-openclaw plugins install bluenexus
-openclaw gateway restart
-```
-
-### Using Link Mode (Alternative)
-
-For rapid development without republishing:
-
-```bash
-openclaw plugins install --link /path/to/bluenexus
-openclaw gateway restart
-```
-
-Changes require only a gateway restart (no reinstall needed).
 
 ## Authentication
 
-After installing the plugin, authenticate with BlueNexus:
+After installing, authenticate with your BlueNexus account:
 
 ```bash
 openclaw models auth login --provider bluenexus
 ```
 
+This opens a browser window for OAuth sign-in. Once complete, the plugin is ready to use.
+
 ## Available Tools
 
-Once authenticated, the plugin provides:
+### `list-connections`
 
-- **bluenexus_connections** - List connected services
-- **bluenexus_agent** - Interact with connected services
-
-## Project Structure
+List all connected services and their status.
 
 ```
-bluenexus/
-├── index.ts              # Plugin entry point
-├── openclaw.plugin.json  # Plugin metadata
-├── package.json
-├── tsconfig.json
-└── src/
-    ├── config.ts         # Configuration parsing
-    ├── mcp-client.ts     # MCP client wrapper
-    ├── oauth.ts          # OAuth 2.1 PKCE implementation
-    ├── types.ts          # TypeScript types
-    └── tools/
-        ├── agent.ts      # Agent tool implementation
-        └── connections.ts # Connections tool implementation
+Which services are connected to my BlueNexus account?
 ```
+
+### `use-agent`
+
+Interact with your connected services through the BlueNexus AI agent.
+
+```
+Create a GitHub issue about the login bug
+What's on my Google Calendar today?
+Search for files about the Q4 project in my Google Drive
+```
+
+You can optionally specify a `connector` parameter to target a specific service (e.g., `github`, `notion`, `slack`).
 
 ## Configuration
 
-Plugin configuration in `openclaw.plugin.json`:
-
 | Option | Default | Description |
 |--------|---------|-------------|
-| serverUrl | https://localhost:3000 | BlueNexus API server URL |
-| clientId | (empty) | OAuth client ID (optional, uses DCR if empty) |
-| redirectPort | 51122 | Local port for OAuth callback |
+| `serverUrl` | `https://api.bluenexus.ai` | BlueNexus API server URL |
+| `clientId` | *(empty)* | OAuth client ID (optional, uses DCR if empty) |
+| `redirectPort` | `51122` | Local port for OAuth callback |
 
-## Publishing to npm
-
-When ready to publish to the public npm registry:
-
-```bash
-# Restore npm to use public registry
-npm config set registry https://registry.npmjs.org
-
-# Login to npm
-npm login
-
-# Publish
-npm publish
-```
+For local development, set the `BLUENEXUS_SERVER_URL` environment variable to override the default server URL.
 
 ## Troubleshooting
 
 ### Plugin not loading
 
-1. Check plugin is installed: `openclaw plugins list`
+1. Verify installation: `openclaw plugins list`
 2. Restart gateway: `openclaw gateway restart`
-3. Check for errors in gateway logs
+3. Check gateway logs for errors
 
 ### Authentication issues
 
 1. Re-authenticate: `openclaw models auth login --provider bluenexus`
-2. Check token expiry in `~/.openclaw/agents/main/agent/auth-profiles.json`
+2. Check token in `~/.openclaw/agents/main/agent/auth-profiles.json`
 
-### TypeScript build errors
+---
 
-Ensure `tsconfig.json` has `"lib": ["ES2022", "DOM"]` for proper Response type support.
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+
+### Setup
+
+```bash
+pnpm install
+pnpm run build
+```
+
+### Watch mode
+
+```bash
+pnpm run dev
+```
+
+### Testing
+
+```bash
+pnpm test
+```
+
+### Local plugin development
+
+```bash
+# Link mode (changes require only gateway restart)
+openclaw plugins install --link /path/to/openclaw
+openclaw gateway restart
+```
+
+### Project Structure
+
+```
+src/
+├── index.ts                  # Plugin entry point
+├── config.ts                 # Configuration parsing (Zod)
+├── constants.ts              # Shared constants
+├── credentials.ts            # Credential storage and refresh
+├── mcp-client.ts             # MCP SDK client wrapper
+├── oauth.ts                  # OAuth 2.1 PKCE implementation
+├── openclaw-types.ts         # OpenClaw plugin API types
+├── types.ts                  # Plugin domain types
+├── __tests__/                # Vitest unit tests
+└── tools/
+    ├── list-connections/     # list-connections tool
+    └── use-agent/            # use-agent tool
+```
+
+### Publishing
+
+```bash
+pnpm run build
+npm publish --access public
+```
+
+## License
+
+[MIT](LICENSE)
