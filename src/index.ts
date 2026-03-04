@@ -19,8 +19,8 @@ import {
   storeCredential,
   tryRefreshCredential,
 } from "./credentials.js";
-import { agentTool, executeAgentTool } from "./tools/agent.js";
-import { connectionsTool, executeConnectionsTool } from "./tools/connections.js";
+import { useAgentTool, executeUseAgentTool } from "./tools/use-agent.js";
+import { listConnectionsTool, executeListConnectionsTool } from "./tools/list-connections.js";
 
 /**
  * Plugin configuration schema for OpenClaw
@@ -103,7 +103,7 @@ const blueNexusPlugin = {
 
     // Register the list-connections tool
     api.registerTool({
-      ...connectionsTool,
+      ...listConnectionsTool,
       async execute(_toolCallId, _params, _ctx) {
         let credential = getStoredCredential();
         if (!credential || Date.now() >= credential.expires) {
@@ -140,13 +140,13 @@ const blueNexusPlugin = {
         }
 
         const client = createMcpClient(config, credential.access);
-        return executeConnectionsTool(client);
+        return executeListConnectionsTool(client);
       },
     });
 
     // Register the use-agent tool
     api.registerTool({
-      ...agentTool,
+      ...useAgentTool,
       async execute(_toolCallId, params, _ctx) {
         let credential = getStoredCredential();
         if (!credential || Date.now() >= credential.expires) {
@@ -183,7 +183,7 @@ const blueNexusPlugin = {
         }
 
         const client = createMcpClient(config, credential.access);
-        return executeAgentTool(client, params as AgentToolParams);
+        return executeUseAgentTool(client, params as AgentToolParams);
       },
     });
 

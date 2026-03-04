@@ -1,5 +1,5 @@
 /**
- * bluenexus_connections tool - List available MCP connections
+ * list-connections tool - List available MCP connections
  *
  * This tool proxies to the BlueNexus Universal MCP's "list-connections" tool
  * to show which services are connected and available for use.
@@ -12,37 +12,42 @@ import type { ListConnectionsResponse } from "../types.js"
 /**
  * Tool schema - no parameters required
  */
-export const ConnectionsToolSchema = Type.Object({})
+export const ListConnectionsToolSchema = Type.Object({})
 
 /**
  * Tool metadata
  */
-export const connectionsTool = {
-  name: "bluenexus_connections",
-  label: "BlueNexus Connections",
+export const listConnectionsTool = {
+  name: "list-connections",
+  label: "List Connections",
   description:
-    "List available BlueNexus MCP connections. Shows which services (GitHub, Notion, Slack, etc.) are connected and ready to use, and which need to be connected.",
-  parameters: ConnectionsToolSchema,
+    `List all the active connections of the user.
+
+Returns information about:
+- Which service/connector is active (e.g., GitHub, Google, Slack, etc.)
+- With which account the user is active (e.g., email or username)
+- A list of services/connectors the user has not activated yet and are therefore strictly unavailable (if relevant, you can encourage the user to connect more services)
+
+Use this to discover what services/connectors are available before using the BlueNexus agent.`,
+  parameters: ListConnectionsToolSchema,
 }
 
 /**
- * Execute the connections tool
+ * Execute the list-connections tool
  */
-export async function executeConnectionsTool(client: McpClient): Promise<{
+export async function executeListConnectionsTool(client: McpClient): Promise<{
   content: Array<{ type: "text"; text: string }>
   details?: unknown
 }> {
   try {
     const result = await client.callTool("list-connections", {})
 
-    // Extract text content from the result
     const text =
       result.content
         .filter((c): c is { type: "text"; text: string } => c.type === "text")
         .map((c) => c.text)
         .join("\n") || "No connection information available."
 
-    // Extract metadata if present
     const meta = result._meta as ListConnectionsResponse | undefined
 
     return {
