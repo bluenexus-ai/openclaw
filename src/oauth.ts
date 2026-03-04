@@ -467,7 +467,7 @@ export async function loginBlueNexus(
     redirectUri,
     challenge,
     state,
-    scope: "openid profile email account connections mcp-proxy llm-all",
+    scope: "openid profile email account connections mcp llm-all",
   })
 
   // Determine if we need manual flow
