@@ -53,6 +53,7 @@
     "url": "https://github.com/bluenexus-ai/openclaw/issues"
   },
   "openclaw": {
+    "id": "bluenexus",
     "extensions": [
       "./dist/index.js"
     ]
