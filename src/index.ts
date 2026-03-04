@@ -5,22 +5,17 @@
  * providing access to connected services like GitHub, Notion, Slack, and more.
  */
 
-import type { AgentToolParams } from "./types.js";
 import type { PluginApi } from "./openclaw-types.js";
 import { PLUGIN_ID, PLUGIN_NAME, PROVIDER_ID, PROVIDER_ALIASES } from "./constants.js";
 import { configUiHints, parseConfig } from "./config.js";
-import { createMcpClient } from "./mcp-client.js";
 import { loginBlueNexus } from "./oauth.js";
 import {
   buildProfileId,
-  getStoredCredential,
-  loadCredentialFromAuthProfiles,
-  persistCredentialToDisk,
   storeCredential,
   tryRefreshCredential,
 } from "./credentials.js";
-import { useAgentTool, executeUseAgentTool } from "./tools/use-agent.js";
-import { listConnectionsTool, executeListConnectionsTool } from "./tools/list-connections.js";
+import { registerListConnectionsTool } from "./tools/list-connections/index.js";
+import { registerUseAgentTool } from "./tools/use-agent/index.js";
 
 /**
  * Plugin configuration schema for OpenClaw
@@ -101,91 +96,9 @@ const blueNexusPlugin = {
       },
     });
 
-    // Register the list-connections tool
-    api.registerTool({
-      ...listConnectionsTool,
-      async execute(_toolCallId, _params, _ctx) {
-        let credential = getStoredCredential();
-        if (!credential || Date.now() >= credential.expires) {
-          credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential;
-        }
-        if (!credential) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
-              },
-            ],
-          };
-        }
-
-        if (Date.now() >= credential.expires) {
-          const refreshed = await tryRefreshCredential(credential, config, log);
-          if (refreshed) {
-            const profileId = buildProfileId(refreshed);
-            storeCredential(profileId, refreshed);
-            await persistCredentialToDisk(refreshed, _ctx, log);
-            credential = refreshed;
-          } else {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus",
-                },
-              ],
-            };
-          }
-        }
-
-        const client = createMcpClient(config, credential.access);
-        return executeListConnectionsTool(client);
-      },
-    });
-
-    // Register the use-agent tool
-    api.registerTool({
-      ...useAgentTool,
-      async execute(_toolCallId, params, _ctx) {
-        let credential = getStoredCredential();
-        if (!credential || Date.now() >= credential.expires) {
-          credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential;
-        }
-        if (!credential) {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
-              },
-            ],
-          };
-        }
-
-        if (Date.now() >= credential.expires) {
-          const refreshed = await tryRefreshCredential(credential, config, log);
-          if (refreshed) {
-            const profileId = buildProfileId(refreshed);
-            storeCredential(profileId, refreshed);
-            await persistCredentialToDisk(refreshed, _ctx, log);
-            credential = refreshed;
-          } else {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus",
-                },
-              ],
-            };
-          }
-        }
-
-        const client = createMcpClient(config, credential.access);
-        return executeUseAgentTool(client, params as AgentToolParams);
-      },
-    });
+    // Register tools (self-contained)
+    registerListConnectionsTool(api, config);
+    registerUseAgentTool(api, config);
 
     log.info?.("BlueNexus plugin registered");
   },

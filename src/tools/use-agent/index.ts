@@ -6,13 +6,20 @@
  */
 
 import { Type } from "@sinclair/typebox"
-import type { McpClient } from "../mcp-client.js"
-import type { AgentToolParams } from "../types.js"
+import type { McpClient } from "../../mcp-client.js"
+import type { PluginApi } from "../../openclaw-types.js"
+import type { AgentToolParams, BlueNexusPluginConfig } from "../../types.js"
+import {
+  buildProfileId,
+  getStoredCredential,
+  loadCredentialFromAuthProfiles,
+  persistCredentialToDisk,
+  storeCredential,
+  tryRefreshCredential,
+} from "../../credentials.js"
+import { createMcpClient } from "../../mcp-client.js"
 
-/**
- * Tool schema with parameters
- */
-export const UseAgentToolSchema = Type.Object({
+const UseAgentToolSchema = Type.Object({
   prompt: Type.String({
     description: "The prompt/instruction for the BlueNexus AI agent",
   }),
@@ -24,10 +31,7 @@ export const UseAgentToolSchema = Type.Object({
   ),
 })
 
-/**
- * Tool metadata
- */
-export const useAgentTool = {
+const toolDefinition = {
   name: "use-agent",
   label: "Use Agent",
   description:
@@ -51,12 +55,9 @@ Example requests:
   parameters: UseAgentToolSchema,
 }
 
-/**
- * Execute the use-agent tool
- */
-export async function executeUseAgentTool(
+async function execute(
   client: McpClient,
-  params: AgentToolParams
+  params: AgentToolParams,
 ): Promise<{
   content: Array<{ type: "text"; text: string }>
   details?: unknown
@@ -109,4 +110,53 @@ export async function executeUseAgentTool(
       ],
     }
   }
+}
+
+export function registerUseAgentTool(
+  api: PluginApi,
+  config: BlueNexusPluginConfig,
+): void {
+  const log = api.logger;
+
+  api.registerTool({
+    ...toolDefinition,
+    async execute(_toolCallId, params, _ctx) {
+      let credential = getStoredCredential();
+      if (!credential || Date.now() >= credential.expires) {
+        credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential;
+      }
+      if (!credential) {
+        return {
+          content: [
+            {
+              type: "text",
+              text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
+            },
+          ],
+        };
+      }
+
+      if (Date.now() >= credential.expires) {
+        const refreshed = await tryRefreshCredential(credential, config, log);
+        if (refreshed) {
+          const profileId = buildProfileId(refreshed);
+          storeCredential(profileId, refreshed);
+          await persistCredentialToDisk(refreshed, _ctx, log);
+          credential = refreshed;
+        } else {
+          return {
+            content: [
+              {
+                type: "text",
+                text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus",
+              },
+            ],
+          };
+        }
+      }
+
+      const client = createMcpClient(config, credential.access);
+      return execute(client, params as AgentToolParams);
+    },
+  });
 }
