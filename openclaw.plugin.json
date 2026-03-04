@@ -6,7 +6,7 @@
   "version": "0.1.0",
   "author": "BlueNexus",
   "homepage": "https://bluenexus.ai",
-  "repository": "https://github.com/bluenexus-ai/bluenexus",
+  "repository": "https://github.com/bluenexus-ai/openclaw",
   "license": "MIT",
   "configSchema": {
     "type": "object",
