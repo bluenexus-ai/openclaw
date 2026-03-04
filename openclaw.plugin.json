@@ -3,7 +3,7 @@
   "id": "bluenexus",
   "name": "BlueNexus",
   "description": "Connect to BlueNexus Universal MCP to access your connected services (GitHub, Notion, Slack, and more)",
-  "version": "0.1.2",
+  "version": "0.1.0",
   "author": "BlueNexus",
   "homepage": "https://bluenexus.ai",
   "repository": "https://github.com/bluenexus-ai/openclaw",

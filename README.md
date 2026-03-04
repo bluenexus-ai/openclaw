@@ -117,13 +117,6 @@ src/
     └── use-agent/            # use-agent tool
 ```
 
-### Publishing
-
-```bash
-pnpm run build
-npm publish --access public
-```
-
 ## License
 
 [MIT](LICENSE)
