@@ -2,7 +2,7 @@
 
 ## Project Context
 
-This is an OpenClaw plugin (`@bluenexus/openclaw`) that integrates BlueNexus Universal MCP with OpenClaw agents. The plugin provides OAuth 2.1 authentication and two tools for interacting with connected services.
+This is an OpenClaw plugin (`@bluenexus/bluenexus-openclaw-plugin`) that integrates BlueNexus Universal MCP with OpenClaw agents. The plugin provides OAuth 2.1 authentication and two tools for interacting with connected services.
 
 ## Key Files
 
@@ -18,7 +18,7 @@ This is an OpenClaw plugin (`@bluenexus/openclaw`) that integrates BlueNexus Uni
 
 ## Important Rules
 
-1. **Plugin ID must remain `bluenexus`** — even though the npm package is `@bluenexus/openclaw`
+1. **Plugin ID is `bluenexus-openclaw-plugin`** — matching the npm package `@bluenexus/bluenexus-openclaw-plugin`
 2. **Default server URL is production** (`https://api.bluenexus.ai`), never localhost
 3. **Tool names match the platform** — `list-connections` and `use-agent`, not `bluenexus_connections` / `bluenexus_agent`
 4. **Agent tool parameter is `connector`** — not `connection`

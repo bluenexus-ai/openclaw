@@ -7,7 +7,7 @@
  */
 export type BlueNexusCredential = {
   type: "oauth"
-  provider: "bluenexus"
+  provider: "bluenexus-openclaw-plugin"
   access: string
   refresh: string
   expires: number

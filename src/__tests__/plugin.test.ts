@@ -29,7 +29,7 @@ function createMockApi(): PluginApi & {
 
 describe("blueNexusPlugin", () => {
   it("has correct id", () => {
-    expect(blueNexusPlugin.id).toBe("bluenexus");
+    expect(blueNexusPlugin.id).toBe("bluenexus-openclaw-plugin");
   });
 
   it("has correct name", () => {
@@ -53,8 +53,9 @@ describe("blueNexusPlugin", () => {
       blueNexusPlugin.register(api);
 
       expect(api.providers).toHaveLength(1);
-      expect(api.providers[0].id).toBe("bluenexus");
+      expect(api.providers[0].id).toBe("bluenexus-openclaw-plugin");
       expect(api.providers[0].label).toBe("BlueNexus");
+      expect(api.providers[0].aliases).toContain("bluenexus");
       expect(api.providers[0].aliases).toContain("bn");
     });
 

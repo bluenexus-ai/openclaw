@@ -8,7 +8,7 @@ import type { BlueNexusCredential } from "../types.js";
 
 const makeCredential = (overrides?: Partial<BlueNexusCredential>): BlueNexusCredential => ({
   type: "oauth",
-  provider: "bluenexus",
+  provider: "bluenexus-openclaw-plugin",
   access: "access-token",
   refresh: "refresh-token",
   expires: Date.now() + 3600000,
@@ -18,12 +18,12 @@ const makeCredential = (overrides?: Partial<BlueNexusCredential>): BlueNexusCred
 describe("buildProfileId", () => {
   it("builds profile ID with email", () => {
     const cred = makeCredential({ email: "user@example.com" });
-    expect(buildProfileId(cred)).toBe("bluenexus:user@example.com");
+    expect(buildProfileId(cred)).toBe("bluenexus-openclaw-plugin:user@example.com");
   });
 
   it("builds profile ID with default when no email", () => {
     const cred = makeCredential({ email: undefined });
-    expect(buildProfileId(cred)).toBe("bluenexus:default");
+    expect(buildProfileId(cred)).toBe("bluenexus-openclaw-plugin:default");
   });
 });
 

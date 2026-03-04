@@ -1,6 +1,6 @@
 {
   "$schema": "https://openclaw.io/schemas/plugin.json",
-  "id": "bluenexus",
+  "id": "bluenexus-openclaw-plugin",
   "name": "BlueNexus",
   "description": "Connect to BlueNexus Universal MCP to access your connected services (GitHub, Notion, Slack, and more)",
   "version": "0.1.0",

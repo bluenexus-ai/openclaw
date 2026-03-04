@@ -130,7 +130,7 @@ export function registerUseAgentTool(
           content: [
             {
               type: "text",
-              text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus",
+              text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
             },
           ],
         };
@@ -148,7 +148,7 @@ export function registerUseAgentTool(
             content: [
               {
                 type: "text",
-                text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus",
+                text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
               },
             ],
           };
