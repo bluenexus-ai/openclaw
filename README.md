@@ -2,23 +2,26 @@
 
 OpenClaw plugin for [BlueNexus](https://bluenexus.ai) Universal MCP. Connect your OpenClaw agents to GitHub, Notion, Slack, Google, and 20+ other services through a single plugin.
 
-## Installation
+## Getting Started
 
 ```bash
+# 1. Install OpenClaw and start the daemon
+openclaw onboard --install-daemon
+
+# 2. Install the BlueNexus plugin
 openclaw plugins install @bluenexus/bluenexus-openclaw-plugin
-```
 
-## Authentication
+# 3. Allow the plugin tools
+openclaw config set tools.alsoAllow '["bluenexus-openclaw-plugin"]'
 
-After installing, authenticate with your BlueNexus account:
+# 4. Restart the gateway to load the plugin
+openclaw gateway restart
 
-```bash
+# 5. Authenticate with your BlueNexus account
 openclaw models auth login --provider bluenexus-openclaw-plugin
 ```
 
-This opens a browser window for OAuth sign-in. Once complete, the plugin is ready to use.
-
-> **Tip:** You can also use the alias `bluenexus` instead of the full provider name.
+Step 5 opens a browser window for OAuth sign-in. Once complete, the plugin is ready to use.
 
 ## Available Tools
 
