@@ -16,7 +16,7 @@ export const AgentToolSchema = Type.Object({
   prompt: Type.String({
     description: "The prompt/instruction for the BlueNexus AI agent",
   }),
-  connection: Type.Optional(
+  connector: Type.Optional(
     Type.String({
       description:
         "Optional: Filter to a specific MCP provider (e.g., 'github', 'notion', 'slack')",
@@ -51,8 +51,8 @@ export async function executeAgentTool(
       prompt: params.prompt,
     }
 
-    if (params.connection) {
-      args.connection = params.connection
+    if (params.connector) {
+      args.connector = params.connector
     }
 
     const result = await client.callTool("use-agent", args)

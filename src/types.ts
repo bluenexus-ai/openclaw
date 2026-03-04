@@ -106,7 +106,7 @@ export type McpToolResult = {
  */
 export type AgentToolParams = {
   prompt: string
-  connection?: string
+  connector?: string
 }
 
 /**
