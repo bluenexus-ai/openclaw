@@ -13,7 +13,7 @@
     "properties": {
       "serverUrl": {
         "type": "string",
-        "default": "https://localhost:3000",
+        "default": "https://api.bluenexus.ai",
         "description": "BlueNexus API server URL"
       },
       "clientId": {
@@ -31,8 +31,8 @@
   "uiHints": {
     "serverUrl": {
       "label": "Server URL",
-      "help": "BlueNexus API server URL. Use default for local development.",
-      "placeholder": "https://localhost:3000"
+      "help": "BlueNexus API server URL. Default points to production.",
+      "placeholder": "https://api.bluenexus.ai"
     },
     "clientId": {
       "label": "Client ID (Optional)",

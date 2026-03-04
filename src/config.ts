@@ -12,7 +12,7 @@ export const BlueNexusConfigSchema = z.object({
   serverUrl: z
     .string()
     .url()
-    .default("https://localhost:3000")
+    .default(process.env.BLUENEXUS_SERVER_URL ?? "https://api.bluenexus.ai")
     .describe("BlueNexus API server URL"),
   clientId: z
     .string()
@@ -67,8 +67,8 @@ export function getOAuthWellKnownUrl(serverUrl: string): string {
 export const configUiHints = {
   serverUrl: {
     label: "Server URL",
-    help: "BlueNexus API server URL. Use default for local development.",
-    placeholder: "https://localhost:3000",
+    help: "BlueNexus API server URL. Default points to production.",
+    placeholder: "https://api.bluenexus.ai",
   },
   clientId: {
     label: "Client ID (Optional)",
