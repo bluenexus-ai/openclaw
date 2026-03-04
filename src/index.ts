@@ -13,12 +13,12 @@
 
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { AgentToolParams, BlueNexusCredential, BlueNexusPluginConfig } from "./src/types.js";
-import { configUiHints, parseConfig } from "./src/config.js";
-import { createMcpClient } from "./src/mcp-client.js";
-import { fetchOAuthMetadata, loginBlueNexus, refreshToken } from "./src/oauth.js";
-import { agentTool, executeAgentTool } from "./src/tools/agent.js";
-import { connectionsTool, executeConnectionsTool } from "./src/tools/connections.js";
+import type { AgentToolParams, BlueNexusCredential, BlueNexusPluginConfig } from "./types.js";
+import { configUiHints, parseConfig } from "./config.js";
+import { createMcpClient } from "./mcp-client.js";
+import { fetchOAuthMetadata, loginBlueNexus, refreshToken } from "./oauth.js";
+import { agentTool, executeAgentTool } from "./tools/agent.js";
+import { connectionsTool, executeConnectionsTool } from "./tools/connections.js";
 
 type PluginLogger = {
   info?: (msg: string) => void;
@@ -423,4 +423,4 @@ const blueNexusPlugin = {
 export default blueNexusPlugin;
 
 // Re-export types for consumers
-export type { BlueNexusCredential, BlueNexusPluginConfig } from "./src/types.js";
+export type { BlueNexusCredential, BlueNexusPluginConfig } from "./types.js";
