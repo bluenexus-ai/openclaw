@@ -116,7 +116,10 @@ export function registerListConnectionsTool(
         }
       }
 
-      const client = createMcpClient(config, credential.access);
+      const effectiveConfig = credential.serverUrl
+        ? { ...config, serverUrl: credential.serverUrl }
+        : config;
+      const client = createMcpClient(effectiveConfig, credential.access);
       return execute(client);
     },
   });
