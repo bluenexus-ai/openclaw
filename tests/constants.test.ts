@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { PLUGIN_ID, PLUGIN_NAME, PROVIDER_ID, PROVIDER_ALIASES } from "../constants.js";
+import { PLUGIN_ID, PLUGIN_NAME, PROVIDER_ID, PROVIDER_ALIASES } from "../src/constants.js";
 
 describe("constants", () => {
   it("has correct plugin id", () => {

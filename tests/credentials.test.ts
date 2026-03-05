@@ -3,8 +3,8 @@ import {
   getStoredCredential,
   storeCredential,
   buildProfileId,
-} from "../credentials.js";
-import type { BlueNexusCredential } from "../types.js";
+} from "../src/credentials.js";
+import type { BlueNexusCredential } from "../src/types.js";
 
 const makeCredential = (overrides?: Partial<BlueNexusCredential>): BlueNexusCredential => ({
   type: "oauth",

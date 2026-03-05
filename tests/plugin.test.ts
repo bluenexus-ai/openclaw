@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import blueNexusPlugin from "../index.js";
-import type { PluginApi, ProviderRegistration, ToolRegistration } from "../openclaw-types.js";
+import blueNexusPlugin from "../src/index.js";
+import type { PluginApi, ProviderRegistration, ToolRegistration } from "../src/openclaw-types.js";
 
 function createMockApi(): PluginApi & {
   providers: ProviderRegistration[];
