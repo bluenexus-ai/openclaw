@@ -5,11 +5,15 @@
  * Authentication is handled via Bearer token in the Authorization header.
  */
 
+import { createRequire } from "node:module"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
 import { Agent } from "undici"
 import { getMcpEndpoint } from "./config.js"
 import type { BlueNexusPluginConfig, McpToolResult } from "./types.js"
+
+const require = createRequire(import.meta.url)
+const { version } = require("../package.json") as { version: string }
 
 /**
  * Create a custom fetch function that allows self-signed certificates for localhost
@@ -53,7 +57,7 @@ export class McpClient {
 
     this.client = new Client({
       name: "bluenexus-openclaw-plugin",
-      version: "0.1.0",
+      version,
     })
   }
 

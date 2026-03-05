@@ -12,6 +12,7 @@ import { createHash, randomBytes } from "node:crypto"
 import { readFileSync } from "node:fs"
 import { createServer } from "node:http"
 import { getOAuthWellKnownUrl } from "./config.js"
+import { PROVIDER_ID } from "./constants.js"
 import type {
   BlueNexusCredential,
   BlueNexusPluginConfig,
@@ -467,7 +468,7 @@ export async function loginBlueNexus(
     redirectUri,
     challenge,
     state,
-    scope: "openid profile email account connections mcp-proxy llm-all",
+    scope: "openid profile email account connections mcp llm-all",
   })
 
   // Determine if we need manual flow
@@ -559,7 +560,7 @@ export async function loginBlueNexus(
 
   return {
     type: "oauth",
-    provider: "bluenexus",
+    provider: PROVIDER_ID,
     access: tokens.access,
     refresh: tokens.refresh,
     expires: tokens.expires,

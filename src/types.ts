@@ -7,7 +7,7 @@
  */
 export type BlueNexusCredential = {
   type: "oauth"
-  provider: "bluenexus"
+  provider: "bluenexus-openclaw-plugin"
   access: string
   refresh: string
   expires: number
@@ -106,7 +106,7 @@ export type McpToolResult = {
  */
 export type AgentToolParams = {
   prompt: string
-  connection?: string
+  connector?: string
 }
 
 /**
