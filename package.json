@@ -48,6 +48,9 @@
     "type": "git",
     "url": "git+https://github.com/bluenexus-ai/openclaw.git"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://github.com/bluenexus-ai/openclaw#readme",
   "bugs": {
     "url": "https://github.com/bluenexus-ai/openclaw/issues"
