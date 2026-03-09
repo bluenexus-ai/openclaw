@@ -1,6 +1,6 @@
 # @bluenexus/bluenexus-openclaw-plugin
 
-OpenClaw plugin for [BlueNexus](https://bluenexus.ai) Universal MCP. Connect your OpenClaw agents to GitHub, Notion, Slack, Google, and 20+ other services through a single plugin.
+OpenClaw plugin for [BlueNexus](https://bluenexus.ai) Universal MCP. Connect your OpenClaw agents to GitHub, Notion, Slack, Google, and more through a single plugin.
 
 ## Getting Started
 
