@@ -19,7 +19,7 @@
     "clean:node_modules": "rm -rf node_modules",
     "clean:dist": "rm -rf dist",
     "dev": "tsc --watch",
-    "build": "tsc && esbuild dist/index.js --bundle --format=esm --platform=node --target=node22 --outfile=dist/index.js --allow-overwrite",
+    "build": "tsc -p tsconfig.build.json && esbuild dist/index.js --bundle --format=esm --platform=node --target=node22 --outfile=dist/index.js --allow-overwrite",
     "check:types": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -45,7 +45,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/bluenexus-ai/openclaw.git"
+    "url": "git+https://github.com/bluenexus-ai/openclaw.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "homepage": "https://github.com/bluenexus-ai/openclaw#readme",
   "bugs": {

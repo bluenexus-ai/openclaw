@@ -4,8 +4,8 @@ import {
   shouldUseManualOAuthFlow,
   buildAuthUrl,
   parseCallbackInput,
-} from "../oauth.js";
-import type { OAuthMetadata } from "../types.js";
+} from "../src/oauth.js";
+import type { OAuthMetadata } from "../src/types.js";
 
 describe("generatePkce", () => {
   it("returns verifier and challenge", () => {

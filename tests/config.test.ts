@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseConfig, getMcpEndpoint, getOAuthWellKnownUrl } from "../config.js";
+import { parseConfig, getMcpEndpoint, getOAuthWellKnownUrl } from "../src/config.js";
 
 describe("parseConfig", () => {
   it("returns defaults when given empty object", () => {
