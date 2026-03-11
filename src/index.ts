@@ -6,8 +6,17 @@
  */
 
 import { configUiHints, parseConfig } from "./config.js"
-import { PLUGIN_ID, PLUGIN_NAME, PROVIDER_ALIASES, PROVIDER_ID } from "./constants.js"
-import { buildProfileId, storeCredential, tryRefreshCredential } from "./credentials.js"
+import {
+  PLUGIN_ID,
+  PLUGIN_NAME,
+  PROVIDER_ALIASES,
+  PROVIDER_ID,
+} from "./constants.js"
+import {
+  buildProfileId,
+  storeCredential,
+  tryRefreshCredential,
+} from "./credentials.js"
 import { loginBlueNexus } from "./oauth.js"
 import type { PluginApi } from "./openclaw-types.js"
 import { registerListConnectionsTool } from "./tools/list-connections/index.js"
@@ -29,7 +38,8 @@ const blueNexusConfigSchema = {
 const blueNexusPlugin = {
   id: PLUGIN_ID,
   name: PLUGIN_NAME,
-  description: "Connect to BlueNexus Universal MCP for access to GitHub, Notion, Slack, and more",
+  description:
+    "Connect to BlueNexus Universal MCP for access to GitHub, Notion, Slack, and more",
   configSchema: blueNexusConfigSchema,
 
   register(api: PluginApi) {
@@ -55,7 +65,8 @@ const blueNexusPlugin = {
               const credential = await loginBlueNexus(config, {
                 isRemote: ctx.isRemote,
                 openUrl: ctx.openUrl,
-                prompt: async (message) => String(await ctx.prompter.text({ message })),
+                prompt: async (message) =>
+                  String(await ctx.prompter.text({ message })),
                 note: ctx.prompter.note,
                 log: (message) => ctx.runtime.log(message),
                 progress: spin,
@@ -82,7 +93,9 @@ const blueNexusPlugin = {
       async refreshOAuth(credential) {
         const refreshed = await tryRefreshCredential(credential, config, log)
         if (!refreshed) {
-          throw new Error("Token refresh failed. Re-authenticate with BlueNexus.")
+          throw new Error(
+            "Token refresh failed. Re-authenticate with BlueNexus."
+          )
         }
 
         const profileId = buildProfileId(refreshed)

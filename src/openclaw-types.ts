@@ -47,7 +47,9 @@ export type ProviderRegistration = {
   docsPath?: string
   aliases?: string[]
   auth: OAuthAuthMethod[]
-  refreshOAuth?: (credential: BlueNexusCredential) => Promise<BlueNexusCredential>
+  refreshOAuth?: (
+    credential: BlueNexusCredential
+  ) => Promise<BlueNexusCredential>
 }
 
 export type ToolResult = {
@@ -60,7 +62,11 @@ export type ToolRegistration = {
   label: string
   description: string
   parameters: unknown
-  execute: (toolCallId: string, params: unknown, ctx: unknown) => Promise<ToolResult>
+  execute: (
+    toolCallId: string,
+    params: unknown,
+    ctx: unknown
+  ) => Promise<ToolResult>
 }
 
 export type PluginApi = {

@@ -17,7 +17,10 @@ import {
 import type { McpClient } from "../../mcp-client.js"
 import { createMcpClient } from "../../mcp-client.js"
 import type { PluginApi } from "../../openclaw-types.js"
-import type { BlueNexusPluginConfig, ListConnectionsResponse } from "../../types.js"
+import type {
+  BlueNexusPluginConfig,
+  ListConnectionsResponse,
+} from "../../types.js"
 
 const ListConnectionsToolSchema = Type.Object({})
 
@@ -72,7 +75,10 @@ async function execute(client: McpClient): Promise<{
   }
 }
 
-export function registerListConnectionsTool(api: PluginApi, config: BlueNexusPluginConfig): void {
+export function registerListConnectionsTool(
+  api: PluginApi,
+  config: BlueNexusPluginConfig
+): void {
   const log = api.logger
 
   api.registerTool({

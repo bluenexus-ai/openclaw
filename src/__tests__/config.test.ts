@@ -49,24 +49,28 @@ describe("parseConfig", () => {
 
 describe("getMcpEndpoint", () => {
   it("appends /mcp to server URL", () => {
-    expect(getMcpEndpoint("https://api.bluenexus.ai")).toBe("https://api.bluenexus.ai/mcp")
+    expect(getMcpEndpoint("https://api.bluenexus.ai")).toBe(
+      "https://api.bluenexus.ai/mcp"
+    )
   })
 
   it("strips trailing slash before appending", () => {
-    expect(getMcpEndpoint("https://api.bluenexus.ai/")).toBe("https://api.bluenexus.ai/mcp")
+    expect(getMcpEndpoint("https://api.bluenexus.ai/")).toBe(
+      "https://api.bluenexus.ai/mcp"
+    )
   })
 })
 
 describe("getOAuthWellKnownUrl", () => {
   it("appends well-known path to server URL", () => {
     expect(getOAuthWellKnownUrl("https://api.bluenexus.ai")).toBe(
-      "https://api.bluenexus.ai/.well-known/oauth-authorization-server",
+      "https://api.bluenexus.ai/.well-known/oauth-authorization-server"
     )
   })
 
   it("strips trailing slash before appending", () => {
     expect(getOAuthWellKnownUrl("https://api.bluenexus.ai/")).toBe(
-      "https://api.bluenexus.ai/.well-known/oauth-authorization-server",
+      "https://api.bluenexus.ai/.well-known/oauth-authorization-server"
     )
   })
 })

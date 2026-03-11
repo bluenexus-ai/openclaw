@@ -27,7 +27,7 @@ const UseAgentToolSchema = Type.Object({
     Type.String({
       description:
         "Optional: Filter to a specific MCP provider (e.g., 'github', 'notion', 'slack')",
-    }),
+    })
   ),
 })
 
@@ -56,7 +56,7 @@ Example requests:
 
 async function execute(
   client: McpClient,
-  params: AgentToolParams,
+  params: AgentToolParams
 ): Promise<{
   content: Array<{ type: "text"; text: string }>
   details?: unknown
@@ -111,7 +111,10 @@ async function execute(
   }
 }
 
-export function registerUseAgentTool(api: PluginApi, config: BlueNexusPluginConfig): void {
+export function registerUseAgentTool(
+  api: PluginApi,
+  config: BlueNexusPluginConfig
+): void {
   const log = api.logger
 
   api.registerTool({

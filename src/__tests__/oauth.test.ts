@@ -57,10 +57,14 @@ describe("buildAuthUrl", () => {
     })
 
     const parsed = new URL(url)
-    expect(parsed.origin + parsed.pathname).toBe("https://api.bluenexus.ai/oauth/authorize")
+    expect(parsed.origin + parsed.pathname).toBe(
+      "https://api.bluenexus.ai/oauth/authorize"
+    )
     expect(parsed.searchParams.get("client_id")).toBe("test-client")
     expect(parsed.searchParams.get("response_type")).toBe("code")
-    expect(parsed.searchParams.get("redirect_uri")).toBe("http://localhost:51122/oauth-callback")
+    expect(parsed.searchParams.get("redirect_uri")).toBe(
+      "http://localhost:51122/oauth-callback"
+    )
     expect(parsed.searchParams.get("code_challenge")).toBe("test-challenge")
     expect(parsed.searchParams.get("code_challenge_method")).toBe("S256")
     expect(parsed.searchParams.get("state")).toBe("test-state")
@@ -84,7 +88,7 @@ describe("buildAuthUrl", () => {
 describe("parseCallbackInput", () => {
   it("parses valid callback URL with code and state", () => {
     const result = parseCallbackInput(
-      "http://localhost:51122/oauth-callback?code=abc123&state=xyz789",
+      "http://localhost:51122/oauth-callback?code=abc123&state=xyz789"
     )
     expect(result).toEqual({ code: "abc123", state: "xyz789" })
   })
@@ -100,18 +104,22 @@ describe("parseCallbackInput", () => {
   })
 
   it("returns error when code is missing", () => {
-    const result = parseCallbackInput("http://localhost:51122/oauth-callback?state=xyz789")
+    const result = parseCallbackInput(
+      "http://localhost:51122/oauth-callback?state=xyz789"
+    )
     expect(result).toEqual({ error: "Missing 'code' parameter in URL" })
   })
 
   it("returns error when state is missing", () => {
-    const result = parseCallbackInput("http://localhost:51122/oauth-callback?code=abc123")
+    const result = parseCallbackInput(
+      "http://localhost:51122/oauth-callback?code=abc123"
+    )
     expect(result).toEqual({ error: "Missing 'state' parameter in URL" })
   })
 
   it("returns error from OAuth error response", () => {
     const result = parseCallbackInput(
-      "http://localhost:51122/oauth-callback?error=access_denied&error_description=User+denied",
+      "http://localhost:51122/oauth-callback?error=access_denied&error_description=User+denied"
     )
     expect(result).toEqual({ error: "User denied" })
   })

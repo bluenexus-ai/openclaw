@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { buildProfileId, getStoredCredential, storeCredential } from "../credentials.js"
+import {
+  buildProfileId,
+  getStoredCredential,
+  storeCredential,
+} from "../credentials.js"
 import type { BlueNexusCredential } from "../types.js"
 
-const makeCredential = (overrides?: Partial<BlueNexusCredential>): BlueNexusCredential => ({
+const makeCredential = (
+  overrides?: Partial<BlueNexusCredential>
+): BlueNexusCredential => ({
   type: "oauth",
   provider: "bluenexus-openclaw-plugin",
   access: "access-token",
@@ -14,7 +20,9 @@ const makeCredential = (overrides?: Partial<BlueNexusCredential>): BlueNexusCred
 describe("buildProfileId", () => {
   it("builds profile ID with email", () => {
     const cred = makeCredential({ email: "user@example.com" })
-    expect(buildProfileId(cred)).toBe("bluenexus-openclaw-plugin:user@example.com")
+    expect(buildProfileId(cred)).toBe(
+      "bluenexus-openclaw-plugin:user@example.com"
+    )
   })
 
   it("builds profile ID with default when no email", () => {
@@ -41,8 +49,14 @@ describe("credential store", () => {
   })
 
   it("overwrites credential with same profile id", () => {
-    const cred1 = makeCredential({ email: "overwrite@example.com", access: "token-old" })
-    const cred2 = makeCredential({ email: "overwrite@example.com", access: "token-new" })
+    const cred1 = makeCredential({
+      email: "overwrite@example.com",
+      access: "token-old",
+    })
+    const cred2 = makeCredential({
+      email: "overwrite@example.com",
+      access: "token-new",
+    })
 
     storeCredential(buildProfileId(cred1), cred1)
     storeCredential(buildProfileId(cred2), cred2)
