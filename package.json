@@ -4,10 +4,7 @@
   "license": "MIT",
   "description": "OpenClaw plugin for BlueNexus Universal MCP - connect OpenClaw agents to BlueNexus services",
   "type": "module",
-  "files": [
-    "dist",
-    "openclaw.plugin.json"
-  ],
+  "files": ["dist", "openclaw.plugin.json"],
   "main": "./dist/index.js",
   "exports": {
     ".": {
@@ -18,22 +15,28 @@
   "scripts": {
     "clean:node_modules": "rm -rf node_modules",
     "clean:dist": "rm -rf dist",
-    "dev": "tsc --watch",
+    "dev": "vitest",
     "build": "tsc -p tsconfig.build.json && esbuild dist/index.js --bundle --format=esm --platform=node --target=node22 --outfile=dist/index.js --allow-overwrite",
+    "check": "biome check .",
+    "check:format": "biome format .",
     "check:types": "tsc --noEmit",
+    "fix": "biome check --write .",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "devDependencies": {
+  "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@sinclair/typebox": "^0.34.33",
+    "undici": "^7.3.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.25.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@types/node": "^22.19.7",
     "esbuild": "^0.25.0",
     "typescript": "^5.9.3",
-    "undici": "^7.3.0",
-    "vitest": "^3.1.1",
-    "zod": "^3.23.8",
-    "zod-to-json-schema": "^3.25.1"
+    "vitest": "^3.1.1"
   },
   "keywords": [
     "openclaw",
@@ -55,9 +58,7 @@
     "url": "https://github.com/bluenexus-ai/openclaw/issues"
   },
   "openclaw": {
-    "extensions": [
-      "./dist/index.js"
-    ]
+    "extensions": ["./dist/index.js"]
   },
   "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
 }

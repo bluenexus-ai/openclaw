@@ -19,8 +19,7 @@ const { version } = require("../package.json") as { version: string }
  * Create a custom fetch function that allows self-signed certificates for localhost
  */
 function createCustomFetch(url: URL): typeof fetch {
-  const isLocalhost =
-    url.hostname === "localhost" || url.hostname === "127.0.0.1"
+  const isLocalhost = url.hostname === "localhost" || url.hostname === "127.0.0.1"
 
   if (isLocalhost && url.protocol === "https:") {
     const agent = new Agent({
@@ -108,10 +107,7 @@ export class McpClient {
   /**
    * Call an MCP tool
    */
-  async callTool(
-    name: string,
-    args: Record<string, unknown>
-  ): Promise<McpToolResult> {
+  async callTool(name: string, args: Record<string, unknown>): Promise<McpToolResult> {
     await this.ensureConnected()
 
     const result = await this.client.callTool({
@@ -175,9 +171,6 @@ export class McpClient {
 /**
  * Create an MCP client with the given config and access token
  */
-export function createMcpClient(
-  config: BlueNexusPluginConfig,
-  accessToken: string
-): McpClient {
+export function createMcpClient(config: BlueNexusPluginConfig, accessToken: string): McpClient {
   return new McpClient(config, accessToken)
 }

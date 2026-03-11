@@ -6,9 +6,6 @@
  */
 
 import { Type } from "@sinclair/typebox"
-import type { McpClient } from "../../mcp-client.js"
-import type { PluginApi } from "../../openclaw-types.js"
-import type { BlueNexusPluginConfig, ListConnectionsResponse } from "../../types.js"
 import {
   buildProfileId,
   getStoredCredential,
@@ -17,15 +14,17 @@ import {
   storeCredential,
   tryRefreshCredential,
 } from "../../credentials.js"
+import type { McpClient } from "../../mcp-client.js"
 import { createMcpClient } from "../../mcp-client.js"
+import type { PluginApi } from "../../openclaw-types.js"
+import type { BlueNexusPluginConfig, ListConnectionsResponse } from "../../types.js"
 
 const ListConnectionsToolSchema = Type.Object({})
 
 const toolDefinition = {
   name: "list-connections",
   label: "List Connections",
-  description:
-    `List all the active connections of the user.
+  description: `List all the active connections of the user.
 
 Returns information about:
 - Which service/connector is active (e.g., GitHub, Google, Slack, etc.)
@@ -73,18 +72,15 @@ async function execute(client: McpClient): Promise<{
   }
 }
 
-export function registerListConnectionsTool(
-  api: PluginApi,
-  config: BlueNexusPluginConfig,
-): void {
-  const log = api.logger;
+export function registerListConnectionsTool(api: PluginApi, config: BlueNexusPluginConfig): void {
+  const log = api.logger
 
   api.registerTool({
     ...toolDefinition,
     async execute(_toolCallId, _params, _ctx) {
-      let credential = getStoredCredential();
+      let credential = getStoredCredential()
       if (!credential || Date.now() >= credential.expires) {
-        credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential;
+        credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential
       }
       if (!credential) {
         return {
@@ -94,16 +90,16 @@ export function registerListConnectionsTool(
               text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
             },
           ],
-        };
+        }
       }
 
       if (Date.now() >= credential.expires) {
-        const refreshed = await tryRefreshCredential(credential, config, log);
+        const refreshed = await tryRefreshCredential(credential, config, log)
         if (refreshed) {
-          const profileId = buildProfileId(refreshed);
-          storeCredential(profileId, refreshed);
-          await persistCredentialToDisk(refreshed, _ctx, log);
-          credential = refreshed;
+          const profileId = buildProfileId(refreshed)
+          storeCredential(profileId, refreshed)
+          await persistCredentialToDisk(refreshed, _ctx, log)
+          credential = refreshed
         } else {
           return {
             content: [
@@ -112,15 +108,15 @@ export function registerListConnectionsTool(
                 text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
               },
             ],
-          };
+          }
         }
       }
 
       const effectiveConfig = credential.serverUrl
         ? { ...config, serverUrl: credential.serverUrl }
-        : config;
-      const client = createMcpClient(effectiveConfig, credential.access);
-      return execute(client);
+        : config
+      const client = createMcpClient(effectiveConfig, credential.access)
+      return execute(client)
     },
-  });
+  })
 }

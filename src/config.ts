@@ -18,7 +18,7 @@ export const BlueNexusConfigSchema = z.object({
     .string()
     .default("")
     .describe(
-      "Fallback OAuth client ID. Leave empty to use Dynamic Client Registration (recommended)."
+      "Fallback OAuth client ID. Leave empty to use Dynamic Client Registration (recommended).",
     ),
   redirectPort: z
     .number()
@@ -34,9 +34,7 @@ export const BlueNexusConfigSchema = z.object({
  */
 export function parseConfig(raw: unknown): BlueNexusPluginConfig {
   const value =
-    raw && typeof raw === "object" && !Array.isArray(raw)
-      ? (raw as Record<string, unknown>)
-      : {}
+    raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {}
 
   return BlueNexusConfigSchema.parse({
     serverUrl: value.serverUrl,

@@ -6,9 +6,6 @@
  */
 
 import { Type } from "@sinclair/typebox"
-import type { McpClient } from "../../mcp-client.js"
-import type { PluginApi } from "../../openclaw-types.js"
-import type { AgentToolParams, BlueNexusPluginConfig } from "../../types.js"
 import {
   buildProfileId,
   getStoredCredential,
@@ -17,7 +14,10 @@ import {
   storeCredential,
   tryRefreshCredential,
 } from "../../credentials.js"
+import type { McpClient } from "../../mcp-client.js"
 import { createMcpClient } from "../../mcp-client.js"
+import type { PluginApi } from "../../openclaw-types.js"
+import type { AgentToolParams, BlueNexusPluginConfig } from "../../types.js"
 
 const UseAgentToolSchema = Type.Object({
   prompt: Type.String({
@@ -27,15 +27,14 @@ const UseAgentToolSchema = Type.Object({
     Type.String({
       description:
         "Optional: Filter to a specific MCP provider (e.g., 'github', 'notion', 'slack')",
-    })
+    }),
   ),
 })
 
 const toolDefinition = {
   name: "use-agent",
   label: "Use Agent",
-  description:
-    `An agent that can access and use the user's connected services.
+  description: `An agent that can access and use the user's connected services.
 
 The agent can help you:
 - Access the user's data across connected services
@@ -112,18 +111,15 @@ async function execute(
   }
 }
 
-export function registerUseAgentTool(
-  api: PluginApi,
-  config: BlueNexusPluginConfig,
-): void {
-  const log = api.logger;
+export function registerUseAgentTool(api: PluginApi, config: BlueNexusPluginConfig): void {
+  const log = api.logger
 
   api.registerTool({
     ...toolDefinition,
     async execute(_toolCallId, params, _ctx) {
-      let credential = getStoredCredential();
+      let credential = getStoredCredential()
       if (!credential || Date.now() >= credential.expires) {
-        credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential;
+        credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential
       }
       if (!credential) {
         return {
@@ -133,16 +129,16 @@ export function registerUseAgentTool(
               text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
             },
           ],
-        };
+        }
       }
 
       if (Date.now() >= credential.expires) {
-        const refreshed = await tryRefreshCredential(credential, config, log);
+        const refreshed = await tryRefreshCredential(credential, config, log)
         if (refreshed) {
-          const profileId = buildProfileId(refreshed);
-          storeCredential(profileId, refreshed);
-          await persistCredentialToDisk(refreshed, _ctx, log);
-          credential = refreshed;
+          const profileId = buildProfileId(refreshed)
+          storeCredential(profileId, refreshed)
+          await persistCredentialToDisk(refreshed, _ctx, log)
+          credential = refreshed
         } else {
           return {
             content: [
@@ -151,15 +147,15 @@ export function registerUseAgentTool(
                 text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
               },
             ],
-          };
+          }
         }
       }
 
       const effectiveConfig = credential.serverUrl
         ? { ...config, serverUrl: credential.serverUrl }
-        : config;
-      const client = createMcpClient(effectiveConfig, credential.access);
-      return execute(client, params as AgentToolParams);
+        : config
+      const client = createMcpClient(effectiveConfig, credential.access)
+      return execute(client, params as AgentToolParams)
     },
-  });
+  })
 }
