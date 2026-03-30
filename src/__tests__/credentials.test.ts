@@ -1,7 +1,11 @@
+import { mkdir, mkdtemp, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import {
   buildProfileId,
   getStoredCredential,
+  loadCredentialFromAuthProfiles,
   storeCredential,
 } from "../credentials.js"
 import type { BlueNexusCredential } from "../types.js"
@@ -66,5 +70,57 @@ describe("credential store", () => {
     expect(stored).toBeDefined()
     // getStoredCredential returns first bluenexus: entry it finds
     // but the overwrite@example.com entry should have the new token
+  })
+
+  it("loads the newest credential across agent dirs when ctx.agentDir is missing", async () => {
+    const home = await mkdtemp(join(tmpdir(), "bluenexus-home-"))
+    const agentsRoot = join(home, ".openclaw", "agents")
+    const mainAgentDir = join(agentsRoot, "main", "agent")
+    const assistantAgentDir = join(agentsRoot, "assistant", "agent")
+
+    await mkdir(mainAgentDir, { recursive: true })
+    await mkdir(assistantAgentDir, { recursive: true })
+
+    const oldCred = makeCredential({
+      access: "old-access",
+      refresh: "old-refresh",
+      expires: 1000,
+    })
+    const newCred = makeCredential({
+      access: "new-access",
+      refresh: "new-refresh",
+      expires: 2000,
+    })
+
+    await writeFile(
+      join(mainAgentDir, "auth-profiles.json"),
+      `${JSON.stringify({
+        profiles: {
+          "bluenexus-openclaw-plugin:default": oldCred,
+        },
+      })}\n`,
+      "utf8"
+    )
+
+    await writeFile(
+      join(assistantAgentDir, "auth-profiles.json"),
+      `${JSON.stringify({
+        profiles: {
+          "bluenexus-openclaw-plugin:default": newCred,
+        },
+      })}\n`,
+      "utf8"
+    )
+
+    const previousHome = process.env.HOME
+    process.env.HOME = home
+    try {
+      const loaded = await loadCredentialFromAuthProfiles({})
+      expect(loaded).toBeDefined()
+      expect(loaded?.access).toBe("new-access")
+      expect(loaded?.expires).toBe(2000)
+    } finally {
+      process.env.HOME = previousHome
+    }
   })
 })

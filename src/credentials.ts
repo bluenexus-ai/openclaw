@@ -5,7 +5,7 @@
  * token refresh, and persistence.
  */
 
-import { readFile, writeFile } from "node:fs/promises"
+import { readFile, readdir, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { PROVIDER_ID } from "./constants.js"
 import { fetchOAuthMetadata, refreshToken } from "./oauth.js"
@@ -54,52 +54,124 @@ export function buildProfileId(credential: BlueNexusCredential): string {
 }
 
 /**
- * Try to load the BlueNexus credential from the agent auth-profiles.json on disk.
+ * Read a BlueNexus credential from one auth-profiles.json file.
+ */
+async function readCredentialFromAuthPath(
+  authPath: string
+): Promise<BlueNexusCredential | undefined> {
+  const raw = await readFile(authPath, "utf8")
+  const json = JSON.parse(raw)
+  const profiles = json?.profiles
+  if (!profiles || typeof profiles !== "object") return undefined
+
+  const prefix = `${PROVIDER_ID}:`
+  const direct = profiles[`${prefix}default`]
+  let found = direct
+  if (!found) {
+    const key = Object.keys(profiles).find((k) => k.startsWith(prefix))
+    found = key ? profiles[key] : undefined
+  }
+  if (!found) return undefined
+
+  if (found.provider !== PROVIDER_ID || found.type !== "oauth") return undefined
+
+  const cred: BlueNexusCredential = {
+    type: "oauth",
+    provider: PROVIDER_ID,
+    access: String(found.access ?? ""),
+    refresh: String(found.refresh ?? ""),
+    expires: Number(found.expires ?? 0),
+    email: found.email ? String(found.email) : undefined,
+    clientId: found.clientId ? String(found.clientId) : undefined,
+    serverUrl: found.serverUrl ? String(found.serverUrl) : undefined,
+  }
+
+  if (!cred.access || !cred.refresh || !cred.expires) return undefined
+  return cred
+}
+
+/**
+ * Build candidate agent dirs to search for auth profiles.
+ * Prefer the current ctx agentDir; if unavailable, search all agent dirs and
+ * pick the credential with the latest expiry rather than blindly falling back
+ * to main/agent (which may hold stale tokens for another session/agent).
+ */
+async function getCandidateAgentDirs(ctx: unknown): Promise<string[]> {
+  const candidates: string[] = []
+  const seen = new Set<string>()
+
+  const push = (value: string | undefined) => {
+    if (!value) return
+    if (seen.has(value)) return
+    seen.add(value)
+    candidates.push(value)
+  }
+
+  const ctxRecord = ctx as Record<string, unknown>
+  push(typeof ctxRecord?.agentDir === "string" ? ctxRecord.agentDir : undefined)
+
+  const home = nodeEnv.HOME ?? ""
+  const agentsRoot = home ? join(home, ".openclaw/agents") : ""
+
+  if (agentsRoot) {
+    try {
+      const entries = await readdir(agentsRoot, { withFileTypes: true })
+
+      // Prefer assistant first, then main, then the rest.
+      const sorted = [...entries]
+        .filter((entry) => entry.isDirectory())
+        .sort((a, b) => {
+          const rank = (name: string) => {
+            if (name === "assistant") return 0
+            if (name === "main") return 1
+            return 2
+          }
+          return rank(a.name) - rank(b.name) || a.name.localeCompare(b.name)
+        })
+
+      for (const entry of sorted) {
+        push(join(agentsRoot, entry.name, "agent"))
+      }
+    } catch {
+      // Ignore directory scan failures and rely on direct fallbacks below.
+    }
+  }
+
+  push(home ? join(home, ".openclaw/agents/assistant/agent") : undefined)
+  push(home ? join(home, ".openclaw/agents/main/agent") : undefined)
+
+  return candidates
+}
+
+/**
+ * Try to load the BlueNexus credential from agent auth-profiles.json files on disk.
  */
 export async function loadCredentialFromAuthProfiles(
   ctx: unknown
 ): Promise<BlueNexusCredential | undefined> {
   try {
-    const agentDirFromCtx = (ctx as Record<string, unknown>)?.agentDir as
-      | string
-      | undefined
-    const agentDir =
-      agentDirFromCtx ?? join(nodeEnv.HOME ?? "", ".openclaw/agents/main/agent")
+    const agentDirs = await getCandidateAgentDirs(ctx)
+    let best: BlueNexusCredential | undefined
 
-    const authPath = join(agentDir, "auth-profiles.json")
-    const raw = await readFile(authPath, "utf8")
-    const json = JSON.parse(raw)
-    const profiles = json?.profiles
-    if (!profiles || typeof profiles !== "object") return undefined
-
-    const prefix = `${PROVIDER_ID}:`
-    const direct = profiles[`${prefix}default`]
-    let found = direct
-    if (!found) {
-      const key = Object.keys(profiles).find((k) => k.startsWith(prefix))
-      found = key ? profiles[key] : undefined
-    }
-    if (!found) return undefined
-
-    if (found.provider !== PROVIDER_ID || found.type !== "oauth")
-      return undefined
-
-    const cred: BlueNexusCredential = {
-      type: "oauth",
-      provider: PROVIDER_ID,
-      access: String(found.access ?? ""),
-      refresh: String(found.refresh ?? ""),
-      expires: Number(found.expires ?? 0),
-      email: found.email ? String(found.email) : undefined,
-      clientId: found.clientId ? String(found.clientId) : undefined,
-      serverUrl: found.serverUrl ? String(found.serverUrl) : undefined,
+    for (const agentDir of agentDirs) {
+      try {
+        const cred = await readCredentialFromAuthPath(
+          join(agentDir, "auth-profiles.json")
+        )
+        if (!cred) continue
+        if (!best || cred.expires > best.expires) {
+          best = cred
+        }
+      } catch {
+        // Ignore individual file failures and keep searching.
+      }
     }
 
-    if (!cred.access || !cred.refresh || !cred.expires) return undefined
+    if (!best) return undefined
 
-    const profileId = buildProfileId(cred)
-    storeCredential(profileId, cred)
-    return cred
+    const profileId = buildProfileId(best)
+    storeCredential(profileId, best)
+    return best
   } catch {
     return undefined
   }

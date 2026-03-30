@@ -8,6 +8,19 @@
   "homepage": "https://bluenexus.ai",
   "repository": "https://github.com/bluenexus-ai/openclaw",
   "license": "MIT",
+  "providers": ["bluenexus-openclaw-plugin"],
+  "providerAuthChoices": [
+    {
+      "provider": "bluenexus-openclaw-plugin",
+      "method": "oauth",
+      "choiceId": "bluenexus-oauth",
+      "choiceLabel": "BlueNexus OAuth",
+      "choiceHint": "OAuth 2.1 PKCE flow with Dynamic Client Registration",
+      "groupId": "bluenexus-openclaw-plugin",
+      "groupLabel": "BlueNexus",
+      "groupHint": "Connect to BlueNexus Universal MCP"
+    }
+  ],
   "configSchema": {
     "type": "object",
     "properties": {
