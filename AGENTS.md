@@ -1,8 +1,16 @@
-# Agent Guidelines for OpenClaw BlueNexus Plugin
+# OpenClaw BlueNexus Plugin
 
-## Project Context
+## Project Overview
 
-This is an OpenClaw plugin (`@bluenexus/bluenexus-openclaw-plugin`) that integrates BlueNexus Universal MCP with OpenClaw agents. The plugin provides OAuth 2.1 authentication and two tools for interacting with connected services.
+This is an OpenClaw plugin (`@bluenexus/bluenexus-openclaw-plugin`) that connects OpenClaw agents to the BlueNexus Universal MCP. It provides two tools (`list-connections` and `use-agent`) and handles OAuth 2.1 PKCE authentication.
+
+## Architecture
+
+- **Entry point:** `src/index.ts` — registers the plugin, OAuth provider, and tools
+- **Tools** are self-contained in `src/tools/{tool-name}/index.ts` — each exports a `registerTool` function
+- **Credentials** management is in `src/credentials.ts` — in-memory store + disk persistence
+- **OAuth** flow is in `src/oauth.ts` — PKCE, DCR, token refresh
+- **Constants** in `src/constants.ts` — plugin ID, provider ID, aliases
 
 ## Key Files
 
@@ -16,26 +24,40 @@ This is an OpenClaw plugin (`@bluenexus/bluenexus-openclaw-plugin`) that integra
 - `src/openclaw-types.ts` — OpenClaw plugin API type definitions
 - `src/types.ts` — Plugin domain types
 
-## Important Rules
+## Key Conventions
 
-1. **Plugin ID is `bluenexus-openclaw-plugin`** — matching the npm package `@bluenexus/bluenexus-openclaw-plugin`
-2. **Default server URL is production** (`https://api.bluenexus.ai`), never localhost
-3. **Tool names match the platform** — `list-connections` and `use-agent`, not `bluenexus_connections` / `bluenexus_agent`
-4. **Agent tool parameter is `connector`** — not `connection`
-5. **No hardcoded versions** — version is read from `package.json` at runtime
-6. **Run tests before committing** — `pnpm test`
-7. **Use constants** from `src/constants.ts` for `PLUGIN_ID`, `PROVIDER_ID`, etc.
+- Use kebab-case for file names
+- Plugin ID is `bluenexus-openclaw-plugin` (matches the npm package `@bluenexus/bluenexus-openclaw-plugin` without the scope/namespace)
+- Production server URL: `https://api.bluenexus.ai` (default, not localhost)
+- Use `BLUENEXUS_SERVER_URL` env var to override for local development
+- Tool names must match the platform: `list-connections` and `use-agent`
+- The agent tool parameter is `connector` (not `connection`)
+- OAuth scope: `openid profile email account connections mcp llm-all`
+- Version is read from `package.json` at runtime (no hardcoded versions)
+- Use constants from `src/constants.ts` for `PLUGIN_ID`, `PROVIDER_ID`, etc.
+
+## Development
+
+```bash
+pnpm install
+pnpm run build.    # build and bundle with esbuild
+pnpm run test      # vitest
+pnpm run dev       # watch mode
+pnpm run check     # biome lint + format + typescript types
+```
+
+## Testing
+
+Tests are in `src/` alongside their source. It is using vitest. Run `pnpm test` before committing.
 
 ## Adding a New Tool
 
 1. Create `src/tools/{tool-name}/index.ts`
 2. Define schema, tool metadata, execute function, and `registerTool` function
 3. Import and call `registerTool` from `src/index.ts`
-4. Add tests in `src/__tests__/{tool-name}.test.ts`
+4. Add unit tests a test file.
 
-## Testing
+## Commit Style
 
-```bash
-pnpm test        # run all tests
-pnpm test:watch  # watch mode
-```
+- `type: description` format (lowercase, imperative mood)
+- Types: feat, fix, refactor, chore, docs, test

@@ -1,30 +1,29 @@
 {
   "name": "@bluenexus/bluenexus-openclaw-plugin",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "description": "OpenClaw plugin for BlueNexus Universal MCP - connect OpenClaw agents to BlueNexus services",
   "type": "module",
-  "files": [
-    "dist",
-    "openclaw.plugin.json"
-  ],
+  "files": ["dist", "openclaw.plugin.json"],
   "main": "./dist/index.js",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
   "scripts": {
     "clean:node_modules": "rm -rf node_modules",
     "clean:dist": "rm -rf dist",
-    "dev": "tsc --watch",
-    "build": "tsc -p tsconfig.build.json && esbuild dist/index.js --bundle --format=esm --platform=node --target=node22 --outfile=dist/index.js --allow-overwrite",
+    "dev": "vitest",
+    "build": "node esbuild.config.mjs",
+    "check": "pnpm run check:biome && pnpm run check:types",
+    "check:biome": "pnpm exec biome check --error-on-warnings",
     "check:types": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "fix": "pnpm exec biome check --fix",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "@sinclair/typebox": "^0.34.33",
     "@types/node": "^22.19.7",
@@ -55,9 +54,7 @@
     "url": "https://github.com/bluenexus-ai/openclaw/issues"
   },
   "openclaw": {
-    "extensions": [
-      "./dist/index.js"
-    ]
+    "extensions": ["./dist/index.js"]
   },
   "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
 }
