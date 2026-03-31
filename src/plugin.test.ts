@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from "vitest"
-import blueNexusPlugin from "../index.js"
+import blueNexusPlugin from "./index.js"
 import type {
   PluginApi,
   ProviderRegistration,
   ToolRegistration,
-} from "../openclaw-types.js"
+} from "./openclaw-types.js"
 
 // Mock credential loading so tests don't depend on local filesystem state
-vi.mock("../credentials.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../credentials.js")>()
+vi.mock("./credentials.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./credentials.js")>()
   return {
     ...actual,
     loadCredentialFromAuthProfiles: vi.fn().mockResolvedValue(undefined),
@@ -118,7 +118,7 @@ describe("blueNexusPlugin", () => {
       expect(listConnections).toBeDefined()
 
       const result = await listConnections?.execute("test-call-id", {}, {})
-      expect(result.content[0].text).toContain("Not authenticated")
+      expect(result?.content[0].text).toContain("Not authenticated")
     })
 
     it("use-agent tool returns auth error when not authenticated", async () => {
@@ -133,7 +133,7 @@ describe("blueNexusPlugin", () => {
         { prompt: "test" },
         {}
       )
-      expect(result.content[0].text).toContain("Not authenticated")
+      expect(result?.content[0].text).toContain("Not authenticated")
     })
   })
 })

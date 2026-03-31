@@ -9,16 +9,28 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up node
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm run build
-      - run: npm publish --access public
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

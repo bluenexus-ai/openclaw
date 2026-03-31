@@ -25,6 +25,6 @@
     }
   },
   "files": {
-    "ignore": ["dist/", "node_modules/", "coverage/", ".turbo/"]
+    "ignore": ["dist/", "node_modules/", "coverage/"]
   }
 }

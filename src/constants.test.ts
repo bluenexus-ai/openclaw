@@ -4,7 +4,7 @@ import {
   PLUGIN_NAME,
   PROVIDER_ALIASES,
   PROVIDER_ID,
-} from "../constants.js"
+} from "./constants.js"
 
 describe("constants", () => {
   it("has correct plugin id", () => {

@@ -26,7 +26,8 @@ This is an OpenClaw plugin (`@bluenexus/bluenexus-openclaw-plugin`) that connect
 
 ## Key Conventions
 
-- Plugin ID is `bluenexus-openclaw-plugin` (matches the npm package `@bluenexus/bluenexus-openclaw-plugin`)
+- Use kebab-case for file names
+- Plugin ID is `bluenexus-openclaw-plugin` (matches the npm package `@bluenexus/bluenexus-openclaw-plugin` without the scope/namespace)
 - Production server URL: `https://api.bluenexus.ai` (default, not localhost)
 - Use `BLUENEXUS_SERVER_URL` env var to override for local development
 - Tool names must match the platform: `list-connections` and `use-agent`
@@ -39,22 +40,22 @@ This is an OpenClaw plugin (`@bluenexus/bluenexus-openclaw-plugin`) that connect
 
 ```bash
 pnpm install
-pnpm run build
-pnpm test          # vitest
+pnpm run build.    # build and bundle with esbuild
+pnpm run test      # vitest
 pnpm run dev       # watch mode
-pnpm run check     # biome lint + format
+pnpm run check     # biome lint + format + typescript types
 ```
 
 ## Testing
 
-Tests are in `src/__tests__/` using vitest. Run `pnpm test` before committing.
+Tests are in `src/` alongside their source. It is using vitest. Run `pnpm test` before committing.
 
 ## Adding a New Tool
 
 1. Create `src/tools/{tool-name}/index.ts`
 2. Define schema, tool metadata, execute function, and `registerTool` function
 3. Import and call `registerTool` from `src/index.ts`
-4. Add tests in `src/__tests__/{tool-name}.test.ts`
+4. Add unit tests a test file.
 
 ## Commit Style
 

@@ -26,9 +26,6 @@ pnpm-debug.log*
 # Test coverage
 coverage/
 
-# Turbo
-.turbo/
-
 # Temp files
 *.tmp
 *.temp
