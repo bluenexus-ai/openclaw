@@ -15,7 +15,7 @@ import {
   storeCredential,
   tryRefreshCredential,
 } from "../credentials.js"
-import { createMcpClient, type McpClient } from "../mcp-client.js"
+import { type McpClient, createMcpClient } from "../mcp-client.js"
 import type { PluginLogger } from "../openclaw-types.js"
 import type { BlueNexusPluginConfig } from "../types.js"
 

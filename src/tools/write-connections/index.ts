@@ -10,10 +10,7 @@
 import { Type } from "@sinclair/typebox"
 import type { McpClient } from "../../mcp-client.js"
 import type { PluginApi } from "../../openclaw-types.js"
-import type {
-  AgentToolParams,
-  BlueNexusPluginConfig,
-} from "../../types.js"
+import type { AgentToolParams, BlueNexusPluginConfig } from "../../types.js"
 import { resolveMcpClient, textResult } from "../_shared.js"
 
 const WriteConnectionsToolSchema = Type.Object({
