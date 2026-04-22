@@ -33,17 +33,48 @@ List all connected services and their status.
 Which services are connected to my BlueNexus account?
 ```
 
-### `use-agent`
+### `read-connections`
 
-Interact with your connected services through the BlueNexus AI agent.
+Delegate a read-only task to the BlueNexus AI agent across any of the user's
+connected services.
+
+```
+What's on my Google Calendar today?
+Search for files about the Q4 project in my Google Drive
+Show my recent meeting notes from Fireflies
+```
+
+### `write-connections`
+
+Delegate a task that can read, create, update, or delete data in the user's
+connected services. Only available to sessions with the
+`universal-mcp-read-write` OAuth scope (the plugin requests this scope by
+default).
 
 ```
 Create a GitHub issue about the login bug
-What's on my Google Calendar today?
-Search for files about the Q4 project in my Google Drive
+Send a Slack message to #engineering with today's standup notes
+Schedule a meeting with the team for next Tuesday at 2pm
 ```
 
-You can optionally specify a `connector` parameter to target a specific service (e.g., `github`, `notion`, `slack`).
+### `search-knowledge-base`
+
+Search, browse, or read pages in the user's compiled knowledge base wiki.
+Actions: `search`, `get_page`, `get_index`.
+
+```
+What do we know about the Q4 launch plan?
+Show the knowledge base table of contents.
+```
+
+### `add-to-knowledge-base`
+
+Add documents, artifacts, or conversation context to the user's knowledge
+base. A compiler LLM will organize and cross-link the content.
+
+```
+Save this report to my knowledge base as "Q2 Marketing Strategy".
+```
 
 ## Configuration
 
@@ -118,8 +149,12 @@ src/
 ├── types.ts                  # Plugin domain types
 ├── __tests__/                # Vitest unit tests
 └── tools/
-    ├── list-connections/     # list-connections tool
-    └── use-agent/            # use-agent tool
+    ├── _shared.ts                 # Shared auth + MCP client helper
+    ├── list-connections/          # list-connections tool
+    ├── read-connections/          # read-connections tool
+    ├── write-connections/         # write-connections tool
+    ├── search-knowledge-base/     # search-knowledge-base tool
+    └── add-to-knowledge-base/     # add-to-knowledge-base tool
 ```
 
 ## License

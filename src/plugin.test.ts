@@ -40,6 +40,14 @@ function createMockApi(): PluginApi & {
   }
 }
 
+const EXPECTED_TOOL_NAMES = [
+  "list-connections",
+  "read-connections",
+  "write-connections",
+  "search-knowledge-base",
+  "add-to-knowledge-base",
+]
+
 describe("blueNexusPlugin", () => {
   it("has correct id", () => {
     expect(blueNexusPlugin.id).toBe("bluenexus-openclaw-plugin")
@@ -72,14 +80,15 @@ describe("blueNexusPlugin", () => {
       expect(api.providers[0].aliases).toContain("bn")
     })
 
-    it("registers two tools", () => {
+    it("registers all five BlueNexus tools", () => {
       const api = createMockApi()
       blueNexusPlugin.register(api)
 
-      expect(api.tools).toHaveLength(2)
+      expect(api.tools).toHaveLength(EXPECTED_TOOL_NAMES.length)
       const toolNames = api.tools.map((t) => t.name)
-      expect(toolNames).toContain("list-connections")
-      expect(toolNames).toContain("use-agent")
+      for (const expected of EXPECTED_TOOL_NAMES) {
+        expect(toolNames).toContain(expected)
+      }
     })
 
     it("registered provider has OAuth auth method", () => {
@@ -108,32 +117,30 @@ describe("blueNexusPlugin", () => {
       )
     })
 
-    it("list-connections tool returns auth error when not authenticated", async () => {
-      const api = createMockApi()
-      blueNexusPlugin.register(api)
+    it.each([
+      { name: "list-connections", params: {} },
+      { name: "read-connections", params: { prompt: "test" } },
+      { name: "write-connections", params: { prompt: "test" } },
+      {
+        name: "search-knowledge-base",
+        params: { action: "get_index" },
+      },
+      {
+        name: "add-to-knowledge-base",
+        params: { name: "Doc", content: "content" },
+      },
+    ])(
+      "$name tool returns auth error when not authenticated",
+      async ({ name, params }) => {
+        const api = createMockApi()
+        blueNexusPlugin.register(api)
 
-      const listConnections = api.tools.find(
-        (t) => t.name === "list-connections"
-      )
-      expect(listConnections).toBeDefined()
+        const tool = api.tools.find((t) => t.name === name)
+        expect(tool).toBeDefined()
 
-      const result = await listConnections?.execute("test-call-id", {}, {})
-      expect(result?.content[0].text).toContain("Not authenticated")
-    })
-
-    it("use-agent tool returns auth error when not authenticated", async () => {
-      const api = createMockApi()
-      blueNexusPlugin.register(api)
-
-      const useAgent = api.tools.find((t) => t.name === "use-agent")
-      expect(useAgent).toBeDefined()
-
-      const result = await useAgent?.execute(
-        "test-call-id",
-        { prompt: "test" },
-        {}
-      )
-      expect(result?.content[0].text).toContain("Not authenticated")
-    })
+        const result = await tool?.execute("test-call-id", params, {})
+        expect(result?.content[0].text).toContain("Not authenticated")
+      }
+    )
   })
 })
