@@ -1,6 +1,6 @@
 {
   "name": "@bluenexus/bluenexus-openclaw-plugin",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
   "description": "OpenClaw plugin for BlueNexus Universal MCP - connect OpenClaw agents to BlueNexus services",
   "type": "module",
