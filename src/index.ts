@@ -2,7 +2,8 @@
  * BlueNexus OpenClaw Plugin
  *
  * This plugin enables OpenClaw agents to connect to BlueNexus Universal MCP,
- * providing access to connected services like GitHub, Notion, Slack, and more.
+ * providing access to connected services like GitHub, Notion, Slack, and more,
+ * as well as the user's compiled knowledge base wiki.
  */
 
 import { configUiHints, parseConfig } from "./config.js"
@@ -19,8 +20,11 @@ import {
 } from "./credentials.js"
 import { loginBlueNexus } from "./oauth.js"
 import type { PluginApi } from "./openclaw-types.js"
+import { registerAddToKnowledgeBaseTool } from "./tools/add-to-knowledge-base/index.js"
 import { registerListConnectionsTool } from "./tools/list-connections/index.js"
-import { registerUseAgentTool } from "./tools/use-agent/index.js"
+import { registerReadConnectionsTool } from "./tools/read-connections/index.js"
+import { registerSearchKnowledgeBaseTool } from "./tools/search-knowledge-base/index.js"
+import { registerWriteConnectionsTool } from "./tools/write-connections/index.js"
 
 /**
  * Plugin configuration schema for OpenClaw
@@ -79,7 +83,8 @@ const blueNexusPlugin = {
                 profiles: [{ profileId, credential }],
                 notes: [
                   "BlueNexus connected! Use list-connections to see available services.",
-                  "Use use-agent to interact with your connected services.",
+                  "Use read-connections or write-connections to delegate tasks to the BlueNexus agent.",
+                  "Use search-knowledge-base and add-to-knowledge-base to interact with the user's wiki.",
                 ],
               }
             } catch (err) {
@@ -107,7 +112,10 @@ const blueNexusPlugin = {
 
     // Register tools (self-contained)
     registerListConnectionsTool(api, config)
-    registerUseAgentTool(api, config)
+    registerReadConnectionsTool(api, config)
+    registerWriteConnectionsTool(api, config)
+    registerSearchKnowledgeBaseTool(api, config)
+    registerAddToKnowledgeBaseTool(api, config)
 
     log.info?.("BlueNexus plugin registered")
   },

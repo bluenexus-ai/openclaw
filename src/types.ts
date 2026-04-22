@@ -102,11 +102,30 @@ export type McpToolResult = {
 }
 
 /**
- * Agent tool parameters
+ * Parameters for the read-connections / write-connections agent tools.
  */
 export type AgentToolParams = {
   prompt: string
-  connector?: string
+}
+
+/**
+ * Parameters for the add-to-knowledge-base tool.
+ */
+export type AddToKnowledgeBaseParams = {
+  name: string
+  content: string
+  source_type?: "text" | "url"
+  url?: string
+  tags?: string
+}
+
+/**
+ * Parameters for the search-knowledge-base tool.
+ */
+export type SearchKnowledgeBaseParams = {
+  action: "search" | "get_page" | "get_index"
+  query?: string
+  slug?: string
 }
 
 /**

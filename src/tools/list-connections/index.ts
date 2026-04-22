@@ -1,26 +1,18 @@
 /**
  * list-connections tool - List available MCP connections
  *
- * This tool proxies to the BlueNexus Universal MCP's "list-connections" tool
- * to show which services are connected and available for use.
+ * Proxies to the BlueNexus Universal MCP's `list-connections` tool to show
+ * which services are connected and available for use.
  */
 
 import { Type } from "@sinclair/typebox"
-import {
-  buildProfileId,
-  getStoredCredential,
-  loadCredentialFromAuthProfiles,
-  persistCredentialToDisk,
-  storeCredential,
-  tryRefreshCredential,
-} from "../../credentials.js"
 import type { McpClient } from "../../mcp-client.js"
-import { createMcpClient } from "../../mcp-client.js"
 import type { PluginApi } from "../../openclaw-types.js"
 import type {
   BlueNexusPluginConfig,
   ListConnectionsResponse,
 } from "../../types.js"
+import { resolveMcpClient, textResult } from "../_shared.js"
 
 const ListConnectionsToolSchema = Type.Object({})
 
@@ -34,7 +26,7 @@ Returns information about:
 - With which account the user is active (e.g., email or username)
 - A list of services/connectors the user has not activated yet and are therefore strictly unavailable (if relevant, you can encourage the user to connect more services)
 
-Use this to discover what services/connectors are available before using the BlueNexus agent.`,
+Use this to discover what services/connectors are available before using the read-connections or write-connections tools.`,
   parameters: ListConnectionsToolSchema,
 }
 
@@ -64,14 +56,7 @@ async function execute(client: McpClient): Promise<{
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    return {
-      content: [
-        {
-          type: "text",
-          text: `Error listing connections: ${message}`,
-        },
-      ],
-    }
+    return textResult(`Error listing connections: ${message}`)
   }
 }
 
@@ -83,46 +68,12 @@ export function registerListConnectionsTool(
 
   api.registerTool({
     ...toolDefinition,
-    async execute(_toolCallId, _params, _ctx) {
-      let credential = getStoredCredential()
-      if (!credential || Date.now() >= credential.expires) {
-        credential = (await loadCredentialFromAuthProfiles(_ctx)) ?? credential
+    async execute(_toolCallId, _params, ctx) {
+      const resolved = await resolveMcpClient(config, ctx, log)
+      if (!resolved.ok) {
+        return textResult(resolved.message)
       }
-      if (!credential) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: "Not authenticated with BlueNexus. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
-            },
-          ],
-        }
-      }
-
-      if (Date.now() >= credential.expires) {
-        const refreshed = await tryRefreshCredential(credential, config, log)
-        if (refreshed) {
-          const profileId = buildProfileId(refreshed)
-          storeCredential(profileId, refreshed)
-          await persistCredentialToDisk(refreshed, _ctx, log)
-          credential = refreshed
-        } else {
-          return {
-            content: [
-              {
-                type: "text",
-                text: "BlueNexus token refresh failed. Run: openclaw models auth login --provider bluenexus-openclaw-plugin",
-              },
-            ],
-          }
-        }
-      }
-
-      const effectiveConfig = credential.serverUrl
-        ? { ...config, serverUrl: credential.serverUrl }
-        : config
-      const client = createMcpClient(effectiveConfig, credential.access)
-      return execute(client)
+      return execute(resolved.client)
     },
   })
 }
