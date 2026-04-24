@@ -415,7 +415,6 @@ export async function loginBlueNexus(
 
   // Use DCR if available, otherwise use configured client ID
   let clientId = config.clientId
-  let usedDcr = false
   if (metadata.registration_endpoint) {
     ctx.progress.update("Registering client...")
     try {
@@ -425,7 +424,6 @@ export async function loginBlueNexus(
         clientName: "OpenClaw BlueNexus Plugin",
       })
       clientId = dcrResponse.client_id
-      usedDcr = true
       ctx.log(`Registered as client: ${clientId}`)
     } catch (err) {
       // DCR failed, fall back to configured client ID

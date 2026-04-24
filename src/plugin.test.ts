@@ -129,18 +129,18 @@ describe("blueNexusPlugin", () => {
         name: "add-to-knowledge-base",
         params: { name: "Doc", content: "content" },
       },
-    ])(
-      "$name tool returns auth error when not authenticated",
-      async ({ name, params }) => {
-        const api = createMockApi()
-        blueNexusPlugin.register(api)
+    ])("$name tool returns auth error when not authenticated", async ({
+      name,
+      params,
+    }) => {
+      const api = createMockApi()
+      blueNexusPlugin.register(api)
 
-        const tool = api.tools.find((t) => t.name === name)
-        expect(tool).toBeDefined()
+      const tool = api.tools.find((t) => t.name === name)
+      expect(tool).toBeDefined()
 
-        const result = await tool?.execute("test-call-id", params, {})
-        expect(result?.content[0].text).toContain("Not authenticated")
-      }
-    )
+      const result = await tool?.execute("test-call-id", params, {})
+      expect(result?.content[0].text).toContain("Not authenticated")
+    })
   })
 })

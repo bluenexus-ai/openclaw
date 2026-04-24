@@ -5,7 +5,7 @@
  * token refresh, and persistence.
  */
 
-import { readFile, readdir, writeFile } from "node:fs/promises"
+import { readdir, readFile, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 import { PROVIDER_ID } from "./constants.js"
 import { fetchOAuthMetadata, refreshToken } from "./oauth.js"
